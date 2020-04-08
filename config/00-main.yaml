@@ -1,0 +1,106 @@
+# Top level configuration
+maya:
+  scoring_system: local_single_thread
+  wsgi:
+    application_root: ""
+    url_prefix: ""
+    scheme: 'http'
+    error_host: 'https://www.wikimedia.org'
+    error_alt: 'Wikimedia'
+  home:
+    footer: >
+      Hosted on localhost &amp; written in
+      <a href="https://python.org">Python 3</a>
+
+# Caching options
+score_caches:
+  memory_lru:
+    class: maya.score_caches.LRU
+    size: 1024
+  local_redis:
+    class: maya.score_caches.Redis
+    host: localhost
+    prefix: maya
+    socket_timeout: 15 # seconds
+  local_redis_sentinel:
+    class: maya.score_caches.RedisSentinel
+    prefix: maya
+    socket_timeout: 0.1 # seconds
+    cluster: mymaster
+    hosts:
+      - localhost:5000
+      - localhost:5001
+      - localhost:5002
+
+#Lock managers
+lock_managers:
+  pool_counter:
+    - localhost:7531
+
+#Task trackers
+task_trackers:
+  redis:
+    class: maya.task_tracker.RedisTaskTracker
+    host: localhost
+    prefix: ores_tasks
+    socket_timeout: 15 # seconds
+    ttl: 300 # 5 minutes
+
+# Metrics collection options
+metrics_collectors:
+  local_logging:
+    class: maya.metrics_collectors.Logger
+
+# Scoring systems do the actual work
+scoring_systems:
+  defaults:
+    metrics_collector: local_logging
+    score_cache: memory_lru
+    scoring_contexts:
+      - testwiki
+    timeout: 15 # seconds
+    connections_per_ip: 4
+    connections_per_ip_hard: 7
+    # Avoid the PoolCounter limit for the given IPs.  Accepts an IP address or
+    # range, v4 or v6.
+    # whitelisted_ips: [ '10.0.0.0/8' ]
+  local_single_thread:
+    class: maya.scoring_systems.SingleThread
+  local_process_pool:
+    class: maya.scoring_systems.ProcessPool
+    workers: 8
+  local_celery:
+    class: maya.scoring_systems.CeleryQueue
+    score_cache: local_redis
+    queue_maxsize: 100 # pending tasks
+    broker_url: redis://localhost
+    broker_transport_options: {'socket_timeout': 15} # seconds
+    accept_content:
+      - 'pickle'
+      - 'json'
+    task_serializer: 'pickle'
+    result_serializer: 'json'
+    result_backend: redis://localhost
+    worker_concurrency: 8
+    worker_hijack_root_logger: false
+
+# Scoring contexts
+scoring_contexts:
+  testwiki:
+    extractor: testwiki_offline
+    scorer_models:
+      revid: testwiki_revid
+    precache:
+      revid:
+        "on": ['edit']
+
+# Available feature extractors
+extractors:
+  testwiki_offline:
+    class: revscoring.extractors.OfflineExtractor
+
+# Scorer models
+scorer_models:
+  testwiki_revid:
+    class: maya.scoring.models.RevIdScorer
+    version: 0.0.0

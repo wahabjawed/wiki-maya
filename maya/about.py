@@ -1,0 +1,7 @@
+__name__ = "maya"
+__version__ = "1.0.0"
+__author__ = "Abdul Wahab"
+__author_email__ = "wahabjawed@gmail.com"
+__description__ = ""
+__url__ = ""
+__license__ = "MIT"

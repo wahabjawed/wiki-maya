@@ -1,0 +1,8 @@
+pytest>=3.6
+pylru
+codecov
+pytest-cov>=2.6
+statsd
+redis
+flake8
+threadpool

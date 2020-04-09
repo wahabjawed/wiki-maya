@@ -1,5 +1,5 @@
 """
-.. autoclass:: revscoring.Datasource
+.. autoclass:: maya.Datasource
     :member-order:
     :inherited-members:
 """

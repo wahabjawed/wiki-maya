@@ -1,9 +1,9 @@
 """
-These meta-datasources operate on :class:`revscoring.Datasource`'s that returns
+These meta-datasources operate on :class:`maya.Datasource`'s that returns
 a list of strings (i.e. "tokens") and produces a list of ngram/skipgram
 sequences.
 
-.. autoclass:: revscoring.datasources.meta.gramming.gram
+.. autoclass:: maya.datasources.meta.gramming.gram
 
 """
 from ..datasource import Datasource
@@ -14,7 +14,7 @@ class gram(Datasource):
     Converts a sequence of items into ngrams.
 
     :Parameters:
-        items_datasource : :class:`revscoring.Datasource`
+        items_datasource : :class:`maya.Datasource`
             A datasource that generates a list of some item
         grams : `list` ( `tuple` ( `int` ) )
             A list of ngram and/or skipgram sequences to produce

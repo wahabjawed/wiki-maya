@@ -289,6 +289,102 @@ class Extractor(BaseExtractor):
             # It's OK to not find a revision here.
             return None
 
+    def get_all_revision_of_page(self, page_id, rvprop={'ids', 'timestamp', 'size', 'userid', 'content'}):
+        if page_id is None:
+            return None
+
+        logger.debug("Requesting the all revision by page id {0} from the API"
+                     .format(page_id))
+
+        is_continue = True
+        rev_docs = list()
+        rvcontinue = None
+
+        while is_continue:
+
+            doc = self.session.get(action="query", list="allrevisions",
+                               pageids=page_id, arvlimit=50,
+                               arvprop=rvprop, arvcontinue=rvcontinue, arvslots="*")
+
+            rev_docs.append(list(doc['query']['allrevisions']))
+
+            if "continue" in doc:
+                rvcontinue = doc['continue']['arvcontinue']
+            else:
+                is_continue = False
+
+
+
+        if len(rev_docs) > 0:
+            return rev_docs
+        else:
+            # It's OK to not find a revision here.
+            return None
+
+    def get_all_revision_of_page_prop(self, page_id, rvprop={'ids', 'timestamp', 'size', 'userid', 'content'}):
+        if page_id is None:
+            return None
+
+        logger.debug("Requesting the all revision by page id {0} from the API"
+                     .format(page_id))
+
+        is_continue = True
+        rev_docs = list()
+        rvcontinue = None
+
+        while is_continue:
+
+            doc = self.session.get(action="query", prop="revisions",
+                               pageids=page_id, rvlimit=50,
+                               rvprop=rvprop, rvcontinue=rvcontinue, rvslots="*")
+
+            page_doc = doc['query'].get('pages', {'revisions': []}).values()
+            rev_docs.append(list(page_doc)[0]['revisions'])
+
+            if "continue" in doc:
+                rvcontinue = doc['continue']['rvcontinue']
+            else:
+                is_continue = False
+
+
+
+        if len(rev_docs) > 0:
+            return rev_docs
+        else:
+            # It's OK to not find a revision here.
+            return None
+
+    def get_all_contrib_user(self, user_id, ucprop={'ids', 'timestamp', 'size', 'sizediff', 'title'}):
+        if user_id is None:
+            return None
+
+        logger.debug("Requesting the all revision by page id {0} from the API"
+                     .format(user_id))
+
+        is_continue = True
+        user_contrib = list()
+        uccontinue = None
+
+        while is_continue:
+
+            doc = self.session.get(action="query", list="usercontribs",
+                               ucuserids=user_id, uclimit=50,
+                               ucprop=ucprop, uccontinue=uccontinue)
+
+            user_contrib.append(list(doc['query']['usercontribs']))
+
+            if "continue" in doc:
+                uccontinue = doc['continue']['uccontinue']
+            else:
+                is_continue = False
+
+
+        if len(user_contrib) > 0:
+            return user_contrib
+        else:
+            # It's OK to not find a revision here.
+            return None
+
     def get_page_creation_doc(self, page_id,
                               rvprop={'ids', 'user', 'timestamp', 'userid',
                                       'comment', 'flags', 'size'}):

@@ -1,9 +1,9 @@
 """
-These meta-datasources operate on :class:`revscoring.Datasource`'s that returns
+These meta-datasources operate on :class:`maya.Datasource`'s that returns
 a list of strings (i.e. "tokens") and produces a list of ngram/skipgram
 sequences.
 
-.. autoclass:: revscoring.datasources.meta.hashing.hash
+.. autoclass:: maya.datasources.meta.hashing.hash
 
 """
 import json
@@ -19,7 +19,7 @@ class hash(Datasource):
     based on the result of applying `str()`.  E.g. `str(["foo"]) = '["foo"]'`
 
     :Parameters:
-        items_datasource : :class:`revscoring.Datasource`
+        items_datasource : :class:`maya.Datasource`
             A datasource that generates a list of items to be hashed
         n : `int`
             The number of potential hashes that can be produced

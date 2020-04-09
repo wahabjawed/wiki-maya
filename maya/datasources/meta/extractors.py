@@ -1,8 +1,8 @@
 """
-These meta-datasources operate on :class:`revscoring.Datasource`'s that
+These meta-datasources operate on :class:`maya.Datasource`'s that
 return `str`'s or `list` ( `str` ) and extract information from them.
 
-.. autoclass:: revscoring.datasources.meta.extractors.regex
+.. autoclass:: maya.datasources.meta.extractors.regex
 
 """
 import re
@@ -17,7 +17,7 @@ class regex(Datasource):
     :Parameters:
         regexes : `list` ( `str` )
             A list of regexes to find in the text
-        text_datasource : :class:`revscoring.Datasource`
+        text_datasource : :class:`maya.Datasource`
             A datasource that returns a `str` or a `list` of `str`
         regex_flags : `int`
             A set of regex flags to use in matching

@@ -1,16 +1,16 @@
 """
-These meta-datasources operate on :class:`revscoring.Datasource`'s that
+These meta-datasources operate on :class:`maya.Datasource`'s that
 return `list`'s of items and produce frequency tables.
 
-.. autoclass:: revscoring.datasources.meta.frequencies.table
+.. autoclass:: maya.datasources.meta.frequencies.table
 
-.. autoclass:: revscoring.datasources.meta.frequencies.delta
+.. autoclass:: maya.datasources.meta.frequencies.delta
 
-.. autoclass:: revscoring.datasources.meta.frequencies.prop_delta
+.. autoclass:: maya.datasources.meta.frequencies.prop_delta
 
-.. autoclass:: revscoring.datasources.meta.frequencies.positive
+.. autoclass:: maya.datasources.meta.frequencies.positive
 
-.. autoclass:: revscoring.datasources.meta.frequencies.negative
+.. autoclass:: maya.datasources.meta.frequencies.negative
 """
 from ..datasource import Datasource
 
@@ -21,7 +21,7 @@ class table(Datasource):
     datasource.
 
     :Parameters:
-        items_datasource : :class:`revscoring.Datasource`
+        items_datasource : :class:`maya.Datasource`
             A datasource that generates a list of some `hashable` item
         name : `str`
             A name for the datasource.
@@ -49,9 +49,9 @@ class delta(Datasource):
     Generates a frequency table diff by comparing two frequency tables.
 
     :Parameters:
-        old_ft_datasource : :class:`revscoring.Datasource`
+        old_ft_datasource : :class:`maya.Datasource`
             A frequency table datasource
-        new_ft_datasource : :class:`revscoring.Datasource`
+        new_ft_datasource : :class:`maya.Datasource`
             A frequency table datasource
         name : `str`
             A name for the datasource.
@@ -83,9 +83,9 @@ class prop_delta(Datasource):
     frequency table diff with an old frequency table.
 
     :Parameters:
-        old_ft_datasource : :class:`revscoring.Datasource`
+        old_ft_datasource : :class:`maya.Datasource`
             A frequency table datasource
-        new_ft_datasource : :class:`revscoring.Datasource`
+        new_ft_datasource : :class:`maya.Datasource`
             A frequency table datasource
         name : `str`
             A name for the datasource.
@@ -112,7 +112,7 @@ class positive(Datasource):
     Filters a table (counts, delta, prop_delta, etc.) for positive values.
 
     :Parameters:
-        table_datasource : :class:`revscoring.Datasource`
+        table_datasource : :class:`maya.Datasource`
             A frequency table datasource
         name : `str`
             A name for the datasource.
@@ -132,7 +132,7 @@ class negative(Datasource):
     Filters a table (counts, delta, prop_delta, etc.) for negative values.
 
     :Parameters:
-        table_datasource : :class:`revscoring.Datasource`
+        table_datasource : :class:`maya.Datasource`
             A frequency table datasource
         absolute : `bool`
             Make negative values positive

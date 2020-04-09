@@ -1,10 +1,10 @@
 """
-These meta-datasources operate on :class:`revscoring.Datasource`'s that
+These meta-datasources operate on :class:`maya.Datasource`'s that
 return `dict`'s
 
-.. autoclass:: revscoring.datasources.meta.dicts.keys
+.. autoclass:: maya.datasources.meta.dicts.keys
 
-.. autoclass:: revscoring.datasources.meta.dicts.values
+.. autoclass:: maya.datasources.meta.dicts.values
 
 """
 from ..datasource import Datasource
@@ -15,7 +15,7 @@ class keys(Datasource):
     Generates a set of `dict` keys
 
     :Parameters:
-        dict_datasource : :class:`revscoring.Datasource`
+        dict_datasource : :class:`maya.Datasource`
             A datasource that generates a `dict`
         name : `str`
             A name for the new datasource.
@@ -35,7 +35,7 @@ class values(Datasource):
     Generates a list of `dict` values
 
     :Parameters:
-        dict_datasource : :class:`revscoring.Datasource`
+        dict_datasource : :class:`maya.Datasource`
             A datasource that generates a `dict`
         name : `str`
             A name for the new datasource.

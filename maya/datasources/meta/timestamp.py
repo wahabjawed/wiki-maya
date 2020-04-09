@@ -1,8 +1,8 @@
 """
-These meta-datasources operate on :class:`revscoring.Datasource`'s that
+These meta-datasources operate on :class:`maya.Datasource`'s that
 return `mwtypes.Timestamp` of the given string.
 
-.. autoclass:: revscoring.datasources.meta.timestamp.Timestamp
+.. autoclass:: maya.datasources.meta.timestamp.Timestamp
 """
 import mwtypes
 

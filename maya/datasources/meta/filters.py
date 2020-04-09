@@ -1,14 +1,14 @@
 """
-These meta-datasources operate on :class:`revscoring.Datasource`'s that
+These meta-datasources operate on :class:`maya.Datasource`'s that
 return `list`'s and produce sub-lists.
 
-.. autoclass:: revscoring.datasources.meta.filters.filter
+.. autoclass:: maya.datasources.meta.filters.filter
 
-.. autoclass:: revscoring.datasources.meta.filters.regex_matching
+.. autoclass:: maya.datasources.meta.filters.regex_matching
 
-.. autoclass:: revscoring.datasources.meta.filters.positive
+.. autoclass:: maya.datasources.meta.filters.positive
 
-.. autoclass:: revscoring.datasources.meta.filters.negative
+.. autoclass:: maya.datasources.meta.filters.negative
 """
 import re
 
@@ -22,7 +22,7 @@ class filter(Datasource):
     :Parameters:
         include : `func`
             A function that returns `True` when an item should be included
-        items_datasource : :class:`revscoring.Datasource`
+        items_datasource : :class:`maya.Datasource`
             A datasource that generates a list of items
         name : `str`
             A name for the datasource.
@@ -49,7 +49,7 @@ class regex_matching(filter):
         regex : `str` | `compiled re`
             A regular expression to match (case-insensitive if a `str` is
             provided)
-        items_datasource : :class:`revscoring.Datasource`
+        items_datasource : :class:`maya.Datasource`
             A datasource that generates a list of items
         name : `str`
             A name for the datasource.
@@ -69,7 +69,7 @@ class positive(filter):
     Generates a filtered list of positive numbers from a list of numbers.
 
     :Parameters:
-        numbers_datasource : :class:`revscoring.Datasource`
+        numbers_datasource : :class:`maya.Datasource`
             A datasource that generates the subset of numbers that are positive
         name : `str`
             A name for the datasource.
@@ -88,7 +88,7 @@ class negative(filter):
     Generates a filtered list of negative numbers from a list of numbers.
 
     :Parameters:
-        numbers_datasource : :class:`revscoring.Datasource`
+        numbers_datasource : :class:`maya.Datasource`
             A datasource that generates the subset of numbers that are negative
         name : `str`
             A name for the datasource.
@@ -107,7 +107,7 @@ class not_none(filter):
     Generates a filtered list of not None entries from a list.
 
     :Parameters:
-        items_datasource : :class:`revscoring.Datasource`
+        items_datasource : :class:`maya.Datasource`
             A datasource that generates the subset of items that are None
         name : `str`
             A name for the datasource.

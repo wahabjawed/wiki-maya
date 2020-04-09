@@ -1,8 +1,8 @@
 """
-These meta-datasources operate on :class:`revscoring.Datasource`'s that
+These meta-datasources operate on :class:`maya.Datasource`'s that
 return `list`'s and `tuple`'s
 
-.. autoclass:: revscoring.datasources.meta.indexable.index
+.. autoclass:: maya.datasources.meta.indexable.index
 
 """
 from ..datasource import Datasource

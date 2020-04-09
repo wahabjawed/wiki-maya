@@ -1,8 +1,8 @@
 """
-These meta-datasources operate on :class:`revscoring.Datasource`'s that
+These meta-datasources operate on :class:`maya.Datasource`'s that
 return `list`'s of items and produce vectors out of the same.
 
-.. autoclass:: revscoring.datasources.meta.vectors
+.. autoclass:: maya.datasources.meta.vectors
 """
 import os.path
 
@@ -19,13 +19,13 @@ class word2vec(Datasource):
     by another datasource.
 
     :Parameters:
-        words_datasource : :class:`revscoring.Datasource`
+        words_datasource : :class:`maya.Datasource`
             A datasource that returns a list of words.
         vectorize_words : `function`
             a function that takes a list of words and converts it to a list
             of vectors of those words
         name : `str`
-            A name for the `revscoring.FeatureVector`
+            A name for the `maya.FeatureVector`
     """  # noqa
 
     def __init__(self, words_datasource, vectorize_words, name=None):

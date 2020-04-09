@@ -2,36 +2,36 @@
 Implements a set of datasources oriented off of a single revision.  This is
 useful for extracting features of edit and article quality.
 
-.. autodata:: revscoring.datasources.revision_oriented.revision
+.. autodata:: maya.datasources.revision_oriented.revision
 
 Supporting classes
 ++++++++++++++++++
 
-.. autoclass:: revscoring.datasources.revision_oriented.Revision
+.. autoclass:: maya.datasources.revision_oriented.Revision
     :members:
     :member-order: bysource
 
-.. autoclass:: revscoring.datasources.revision_oriented.Diff
+.. autoclass:: maya.datasources.revision_oriented.Diff
     :members:
     :member-order: bysource
 
-.. autoclass:: revscoring.datasources.revision_oriented.Page
+.. autoclass:: maya.datasources.revision_oriented.Page
     :members:
     :member-order: bysource
 
-.. autoclass:: revscoring.datasources.revision_oriented.Namespace
+.. autoclass:: maya.datasources.revision_oriented.Namespace
     :members:
     :member-order: bysource
 
-.. autoclass:: revscoring.datasources.revision_oriented.Suggested
+.. autoclass:: maya.datasources.revision_oriented.Suggested
     :members:
     :member-order: bysource
 
-.. autoclass:: revscoring.datasources.revision_oriented.User
+.. autoclass:: maya.datasources.revision_oriented.User
     :members:
     :member-order: bysource
 
-.. autoclass:: revscoring.datasources.revision_oriented.UserInfo
+.. autoclass:: maya.datasources.revision_oriented.UserInfo
     :members:
     :member-order: bysource
 
@@ -90,7 +90,7 @@ class Revision(DependentSet):
                 include_page_suggested=False
             )
             """
-            :class:`~revscoring.datasources.revision_oriented.Revision` : The
+            :class:`~maya.datasources.revision_oriented.Revision` : The
             parent (aka "previous") revision of the page.
             """
 
@@ -101,7 +101,7 @@ class Revision(DependentSet):
                 include_suggested=include_page_suggested
             )
             """
-            :class:`~revscoring.datasources.revision_oriented.Page` : The
+            :class:`~maya.datasources.revision_oriented.Page` : The
             page in which the revision was saved.
             """
 
@@ -112,7 +112,7 @@ class Revision(DependentSet):
                 include_last_revision=include_user_last_revision
             )
             """
-            :class:`~revscoring.datasources.revision_oriented.User` : The
+            :class:`~maya.datasources.revision_oriented.User` : The
             user who saved the revision.
             """
 
@@ -121,7 +121,7 @@ class Revision(DependentSet):
                 name + ".diff"
             )
             """
-            :class:`~revscoring.datasources.revision_oriented.Diff` : The
+            :class:`~maya.datasources.revision_oriented.Diff` : The
             difference between this revision and the parent revision.
             """
 
@@ -142,7 +142,7 @@ class User(DependentSet):
         if include_info:
             self.info = UserInfo(name + ".info")
             """
-            :class:`~revscoring.datasources.revision_oriented.UserInfo` :
+            :class:`~maya.datasources.revision_oriented.UserInfo` :
             Information about the user.
             """
 
@@ -155,7 +155,7 @@ class User(DependentSet):
                 include_page_suggested=False
             )
             """
-            :class:`~revscoring.datasources.revision_oriented.Revision` : The
+            :class:`~maya.datasources.revision_oriented.Revision` : The
             last revision the user saved before the revision of reference.
             """
 
@@ -196,7 +196,7 @@ class Page(DependentSet):
         "`str` : The page's title (namespace stripped)"
         self.namespace = Namespace(name + ".namespace")
         """
-        :class:`~revscoring.datasources.revision_oriented.Namespace` : The
+        :class:`~maya.datasources.revision_oriented.Namespace` : The
         namespace information.
         """
 
@@ -210,14 +210,14 @@ class Page(DependentSet):
                 include_page_suggested=False
             )
             """
-            :class:`~revscoring.datasources.revision_oriented.Revision` : The
+            :class:`~maya.datasources.revision_oriented.Revision` : The
             first revision to the page.
             """
 
         if include_suggested:
             self.suggested = Suggested(name + ".suggestions")
             """
-            :class:`~revscoring.datasources.revision_oriented.Suggested` :
+            :class:`~maya.datasources.revision_oriented.Suggested` :
             The set of suggestions for a page.
             """
 
@@ -265,16 +265,16 @@ revision = Revision(
 """
 Represents the base revision of interest.  Implements this structure:
 
-* revision: :class:`~revscoring.datasources.revision_oriented.Revision`
-    * diff: :class:`~revscoring.datasources.revision_oriented.Diff`
-    * user: :class:`~revscoring.datasources.revision_oriented.User`
-        * info: :class:`~revscoring.datasources.revision_oriented.UserInfo`
+* revision: :class:`~maya.datasources.revision_oriented.Revision`
+    * diff: :class:`~maya.datasources.revision_oriented.Diff`
+    * user: :class:`~maya.datasources.revision_oriented.User`
+        * info: :class:`~maya.datasources.revision_oriented.UserInfo`
         * last_revision:
-            * page: :class:`~revscoring.datasources.revision_oriented.Page`
-                * namespace: :class:`~revscoring.datasources.revision_oriented.Namespace`
-    * page: :class:`~revscoring.datasources.revision_oriented.Page`
-        * namespace: :class:`~revscoring.datasources.revision_oriented.Namespace`
-        * creation: :class:`~revscoring.datasources.revision_oriented.Revision`
-    * parent: :class:`~revscoring.datasources.revision_oriented.Revision`
-        * user: :class:`~revscoring.datasources.revision_oriented.User`
+            * page: :class:`~maya.datasources.revision_oriented.Page`
+                * namespace: :class:`~maya.datasources.revision_oriented.Namespace`
+    * page: :class:`~maya.datasources.revision_oriented.Page`
+        * namespace: :class:`~maya.datasources.revision_oriented.Namespace`
+        * creation: :class:`~maya.datasources.revision_oriented.Revision`
+    * parent: :class:`~maya.datasources.revision_oriented.Revision`
+        * user: :class:`~maya.datasources.revision_oriented.User`
 """  # noqa

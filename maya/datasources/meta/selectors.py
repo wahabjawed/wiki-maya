@@ -1,11 +1,11 @@
 """
-These meta-datasources operate on :class:`revscoring.Datasource`'s that return
+These meta-datasources operate on :class:`maya.Datasource`'s that return
 a flat `dict` of key-value pairs (aka a "table") and filter ("select") keys
 and/or weight values.
 
-.. autoclass:: revscoring.datasources.meta.selectors.tfidf
+.. autoclass:: maya.datasources.meta.selectors.tfidf
 
-.. autoclass:: revscoring.datasources.meta.selectors.filter_keys
+.. autoclass:: maya.datasources.meta.selectors.filter_keys
 
 """
 
@@ -21,7 +21,7 @@ class tfidf(Datasource):
     TF-iDF weighting.
 
     :Parameters:
-        table_datasource : :class:`revscoring.Datasource`
+        table_datasource : :class:`maya.Datasource`
             A datasource that generates a dict of term frequency counts
         max_terms : `int`
             The maximum number of terms that will be selected.  The terms
@@ -115,7 +115,7 @@ class filter_keys(Datasource):
     Selects a subset of features (key/values) based a set of keys.
 
     :Parameters:
-        table_datasource : :class:`revscoring.Datasource`
+        table_datasource : :class:`maya.Datasource`
             A datasource that generates a table including only the specified
             keys
         keys : `iterable` ( `hashable` )

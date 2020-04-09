@@ -1,44 +1,44 @@
 """
-Meta-Features are classes that extend :class:`~revscoring.Datasource` and
-implement common operations on other :class:`~revscoring.Datasource`.
+Meta-Features are classes that extend :class:`~maya.Datasource` and
+implement common operations on other :class:`~maya.Datasource`.
 
 dicts
 +++++
-.. automodule:: revscoring.datasources.meta.dicts
+.. automodule:: maya.datasources.meta.dicts
 
 extractors
 ++++++++++
-.. automodule:: revscoring.datasources.meta.extractors
+.. automodule:: maya.datasources.meta.extractors
 
 filters
 +++++++
-.. automodule:: revscoring.datasources.meta.filters
+.. automodule:: maya.datasources.meta.filters
 
 frequencies
 +++++++++++
-.. automodule:: revscoring.datasources.meta.frequencies
+.. automodule:: maya.datasources.meta.frequencies
 
 gramming
 ++++++++
-.. automodule:: revscoring.datasources.meta.gramming
+.. automodule:: maya.datasources.meta.gramming
 
 hashing
 +++++++
-.. automodule:: revscoring.datasources.meta.hashing
+.. automodule:: maya.datasources.meta.hashing
 
 indexable
 +++++++++
-.. automodule:: revscoring.datasources.meta.indexable
+.. automodule:: maya.datasources.meta.indexable
 
 mappers
 +++++++
-.. automodule:: revscoring.datasources.meta.mappers
+.. automodule:: maya.datasources.meta.mappers
 
 selectors
 +++++++++
-.. automodule:: revscoring.datasources.meta.selectors
+.. automodule:: maya.datasources.meta.selectors
 
 timestamp
 +++++++++
-.. automodule:: revscoring.datasources.meta.timestamp
+.. automodule:: maya.datasources.meta.timestamp
 """

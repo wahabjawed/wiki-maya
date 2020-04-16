@@ -1,4 +1,7 @@
 import sys
+
+from maya.nltk import util
+
 sys.path.append("..")
 from mwapi import Session
 from maya.extractors import api
@@ -22,6 +25,7 @@ test = api_extractor.get_rev_doc_map([944941487])
 print(test)
 pageId = test[944941487]['page']['pageid']
 userId = test[944941487]['userid']
+text = test[944941487]['slots']['main']['*']
 
 # values = api_extractor.get_all_revision_of_page_prop(pageId, rvprop={'ids', 'timestamp', 'size', 'userid'})
 # print(values)
@@ -38,6 +42,9 @@ userId = test[944941487]['userid']
 #
 # userContrib = allUserContrib[userId]/totalContrib*100
 # print(userContrib)
+
+ctext = util.cleanhtml(text)
+grammar_rate = util.check_grammar_error_rate(ctext)
 
 uc = api_extractor.get_all_contrib_user(userId);
 print(uc)

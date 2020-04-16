@@ -1,20 +1,24 @@
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
-import re
 import string
 from nltk.stem import PorterStemmer
 from nltk import word_tokenize, pos_tag, ne_chunk
 from textblob import TextBlob
 import spacy
-from textstat.textstat import textstatistics, easy_word_set, legacy_round
-# import language_check
+from textstat.textstat import textstatistics, easy_word_set
+import language_check
+import re
+import math
 
 def convert_text_lower_case(text):
     lower_text = text.lower()
     print(lower_text)
     return lower_text
 
+def legacy_round(number, precision):
+    k = pow(10, (precision or 0))
+    return math.floor((number * k) + 0.5 * math.sign(number)) / k
 
 def word_tokenize(text):
     word_tokens = nltk.word_tokenize(text)
@@ -243,14 +247,19 @@ def dale_chall_readability_score(text):
     # return legacy_round(score, 2)
 
 
-    # tool = language_check.LanguageTool('en-US')
-    # text = 'A sentence with a error in the Hitchhiker\'s Guide tot he Galaxy'
-    # matches = tool.check(text)
-    #
-    # matches[0].fromy, matches[0].fromx  # (0, 16)
-    # matches[0].ruleId, matches[0].replacements  # ('EN_A_VS_AN', ['an'])
-    # matches[1].fromy, matches[1].fromx  # (0, 50)
-    # matches[1].ruleId, matches[1].replacements  # ('TOT_HE', ['to the'])
-    #
-    # language_check.correct(text, matches)
-    # # 'A sentence with an error in the Hitchhiker\'s Guide to the Galaxy'
+def check_grammar_error_rate(text):
+    tool = language_check.LanguageTool('en-US')
+    matches = tool.check(text)
+    return len(matches)/len(word_tokenize(text))
+    #language_check.correct(text, matches)
+    # 'A sentence with an error in the Hitchhiker\'s Guide to the Galaxy'
+
+
+def cleanhtml(raw_html):
+    cleanr = re.compile('{{((?!{{).)*}}|\[\[(.*Category).*\]\]')
+    cleantext = re.sub(cleanr, '', raw_html)
+    cleanr = re.compile('({{)([\s\S]*?)(}})|\[\[|\]\]|(==.*==)|<.*?>')
+    cleantext = re.sub(cleanr, '', cleantext)
+    cleanr = re.compile('http\S+')
+    cleantext = re.sub(cleanr, '', cleantext)
+    return cleantext

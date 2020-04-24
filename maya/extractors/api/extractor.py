@@ -232,6 +232,29 @@ class Extractor(BaseExtractor):
 
         return {rd['revid']: rd for rd in rev_docs}
 
+    def get_plaintext(self, revids):
+        if len(revids) == 0:
+            return {}
+
+        logger.debug("Building a map of {0} revisions: {1}"
+                     .format(len(revids), revids))
+
+        revids_iter = iter(revids)
+        while True:
+            batch_ids = list(islice(revids_iter, 0, 50))
+            if len(batch_ids) == 0:
+                break
+            else:
+                doc = self.session.get(action='query', prop='extracts',
+                                       revids=batch_ids, explaintext='1',
+                                       exsectionformat='plain')
+
+                page_doc = doc['query'].get('pages', {}).values()
+
+
+        # return {rd['pageid']: rd for rd in page_doc}
+        return doc
+
     def query_revisions_by_revids(self, revids, batch=50, **params):
         revids_iter = iter(revids)
         while True:
@@ -321,7 +344,8 @@ class Extractor(BaseExtractor):
             # It's OK to not find a revision here.
             return None
 
-    def get_all_revision_of_page_prop(self, page_id, rvprop={'ids', 'timestamp', 'size', 'userid', 'content'}):
+    def get_all_revision_of_page_prop(self, page_id, rvprop={'ids', 'timestamp', 'size', 'userid', 'content'}, rv_dir="newer",
+                                      rv_limit=50, rv_start=None, rvstartid=None, should_continue=True):
         if page_id is None:
             return None
 
@@ -333,20 +357,17 @@ class Extractor(BaseExtractor):
         rvcontinue = None
 
         while is_continue:
-
             doc = self.session.get(action="query", prop="revisions",
-                               pageids=page_id, rvlimit=50,
-                               rvprop=rvprop, rvcontinue=rvcontinue, rvslots="*")
+                               pageids=page_id, rvlimit=rv_limit, rvdir=rv_dir,
+                               rvprop=rvprop, rvcontinue=rvcontinue, rvstartid=rvstartid, rvslots="*")
 
             page_doc = doc['query'].get('pages', {'revisions': []}).values()
             rev_docs.append(list(page_doc)[0]['revisions'])
 
-            if "continue" in doc:
+            if should_continue and "continue" in doc:
                 rvcontinue = doc['continue']['rvcontinue']
             else:
                 is_continue = False
-
-
 
         if len(rev_docs) > 0:
             return rev_docs
@@ -368,7 +389,7 @@ class Extractor(BaseExtractor):
         while is_continue:
 
             doc = self.session.get(action="query", list="usercontribs",
-                               ucuserids=user_id, uclimit=50,
+                               ucuserids=user_id, uclimit=50, ucdir="newer",
                                ucprop=ucprop, uccontinue=uccontinue)
 
             user_contrib.append(list(doc['query']['usercontribs']))

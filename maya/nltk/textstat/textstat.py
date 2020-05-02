@@ -5,8 +5,9 @@ import re
 import math
 from collections import Counter
 from functools import lru_cache
-
+from readcalc import readcalc
 import pkg_resources
+import spacy
 from pyphen import Pyphen
 
 
@@ -100,6 +101,8 @@ class textstatistics:
                 self.gunning_fog(self.text), self.lix(self.text),
                 self.rix(self.text), self.spache_readability(self.text,float_output=False),
                 self.dale_chall_readability_score_v2(self.text), self.reading_time(self.text)]
+                # ,self.flesch_kincaid_grade_2(self.text),self.smog_index_2(self.text), self.coleman_liau_index_2(self.text),
+                # self.automated_readability_index_2(self.text), self.dale_chall_readability_score_2(self.text) ]
 
     def _cache_clear(self):
         caching_methods = [
@@ -307,6 +310,26 @@ class textstatistics:
                 return 0.0
         else:
             return 0.0
+
+    def flesch_kincaid_grade_2(selfself, text):
+        calc = readcalc.ReadCalc(text)
+        return calc.get_flesch_reading_ease()
+
+    def coleman_liau_index_2(selfself, text):
+        calc = readcalc.ReadCalc(text)
+        return calc.get_coleman_liau_index()
+
+    def automated_readability_index_2(selfself, text):
+        calc = readcalc.ReadCalc(text)
+        return calc.get_ari_index()
+
+    def dale_chall_readability_score_2(selfself, text):
+        calc = readcalc.ReadCalc(text)
+        return calc.get_dale_chall_score()
+
+    def smog_index_2(selfself, text):
+        calc = readcalc.ReadCalc(text)
+        return calc.get_smog_index()
 
     @lru_cache(maxsize=128)
     def coleman_liau_index(self, text):
@@ -603,5 +626,3 @@ class textstatistics:
             }
         self.lang_easy_word = easy_word_set
         return easy_word_set
-#
-# textstat = textstatistics(text="")

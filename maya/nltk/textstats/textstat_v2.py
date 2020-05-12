@@ -117,7 +117,7 @@ class textstatistics_v2:
         if lang:
             warnings.warn(
                 "The 'lang' argument has been moved to "
-                "'textstat.set_lang(<lang>)'. This argument will be removed "
+                "'textstats.set_lang(<lang>)'. This argument will be removed "
                 "in the future.",
                 DeprecationWarning
             )
@@ -310,4 +310,4 @@ class textstatistics_v2:
         return legacy_round(raw_score, 2)
 
 #
-# textstat = textstatistics(text="")
+# textstats = textstatistics(text="")

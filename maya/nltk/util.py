@@ -1,4 +1,5 @@
 import difflib
+from html.entities import name2codepoint
 
 import nltk
 from nltk.corpus import stopwords
@@ -8,7 +9,6 @@ from nltk.stem import PorterStemmer
 from nltk import word_tokenize, pos_tag, ne_chunk
 from textblob import TextBlob
 import spacy
-from textstat.textstat import textstatistics, easy_word_set, textstat
 import language_check
 import re
 import math

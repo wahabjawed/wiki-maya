@@ -174,7 +174,7 @@ class textstatistics:
         if lang:
             warnings.warn(
                 "The 'lang' argument has been moved to "
-                "'textstat.set_lang(<lang>)'. This argument will be removed "
+                "'textstats.set_lang(<lang>)'. This argument will be removed "
                 "in the future.",
                 DeprecationWarning
             )
@@ -621,7 +621,7 @@ class textstatistics:
             easy_word_set = {
                 ln.decode("utf-8").strip()
                 for ln in pkg_resources.resource_stream(
-                    "textstat", f".../resources/en/easy_words.txt"
+                    "textstats", f".../resources/en/easy_words.txt"
                 )
             }
         self.lang_easy_word = easy_word_set

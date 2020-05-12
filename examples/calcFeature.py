@@ -6,7 +6,7 @@ from itertools import islice
 import language_check
 import pandas as pd
 from maya.nltk import util
-from maya.nltk.textstat.textstat import textstatistics
+from maya.nltk.textstats.textstats import textstatistics
 from readcalc import readcalc
 
 
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         file_name = os.path.basename(file)
         rev_text.append((file_name, file))
 
-    rev_xl = pd.read_csv("../data/2017_english_wikipedia_quality_dataset/datasets/training]-set.tsv", delimiter="\t",
+    rev_xl = pd.read_csv("../data/2017_english_wikipedia_quality_dataset/datasets/training-set.tsv", delimiter="\t",
                          dtype={0: 'int32', 1: 'int32', 2: 'int32', 3: 'int32', 4: 'object'})
 
     rev_xl = rev_xl.reindex(columns=rev_xl.columns.tolist() + new_column)

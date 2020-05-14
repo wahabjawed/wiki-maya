@@ -381,7 +381,8 @@ def testFeature():
         if (os.path.exists(filename)):
             print(str(row['revid']))
             text = util.read_file(filename)
-            filtered_sentence = remove_stopwords(text)
+            filtered_sentence = text
+            #filtered_sentence = remove_stopwords(text)
 
             #print(filtered_sentence)
             result = [textstat.flesch_reading_ease(filtered_sentence), textstat.flesch_kincaid_grade(filtered_sentence), textstat.smog_index(filtered_sentence),

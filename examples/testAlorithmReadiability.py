@@ -21,18 +21,25 @@ def findBestFeatures(train_data_path, test_data_path):
     # ANOVA feature selection for numeric input and categorical output
 
     train = pd.read_csv(train_data_path)
-    feature_name = ['linsear_write_formula', 'dale_chall_readability_score', 'rix',
-                    'spache_readability', 'dale_chall_readability_score_v2', 'reading_time', 'grammar',
-                    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16","17", "18",
-                    "19"]
+    # feature_name = ['linsear_write_formula', 'dale_chall_readability_score', 'rix',
+    #                 'spache_readability', 'dale_chall_readability_score_v2', 'reading_time', 'grammar',
+    #                 "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16","17", "18",
+    #                 "19"]
+
+    feature_name = ['infonoisescore', 'logcontentlength','logreferences','logpagelinks','numimageslength','num_citetemplates','lognoncitetemplates',
+                         'num_categories','hasinfobox','lvl2headings','lvl3heading', 'number_chars', 'number_words', 'number_types', 'number_sentences', 'number_syllables',
+     'number_polysyllable_words', 'difficult_words', 'number_words_longer_4', 'number_words_longer_6', 'number_words_longer_10',
+     'number_words_longer_longer_13', 'flesch_reading_ease', 'flesch_kincaid_grade_level', 'coleman_liau_index',
+     'gunning_fog_index', 'smog_index', 'ari_index', 'lix_index', 'dale_chall_score']
+
     features = train[feature_name]
 
-    target_names = train['rating'].unique()
+    target_names = train['user_rating'].unique()
     print(features)
 
-    y = pd.factorize(train['rating'])[0]
+    y = pd.factorize(train['user_rating'])[0]
     # define feature selection
-    fs = SelectKBest(score_func=f_classif, k=17)
+    fs = SelectKBest(score_func=f_classif, k=25)
     # apply feature selection
     X_selected = fs.fit_transform(features, y)
     print(X_selected.shape)
@@ -50,8 +57,10 @@ def findBestFeatures(train_data_path, test_data_path):
 
 
 if __name__ == "__main__":
-    train_data_path = "../data/2017_english_wikipedia_quality_dataset/datasets/training-set-n3.csv"
-    test_data_path = "../data/2017_english_wikipedia_quality_dataset/datasets/test-set-n3.csv"
+    # train_data_path = "../data/2017_english_wikipedia_quality_dataset/datasets/training-set-n3.csv"
+    # test_data_path = "../data/2017_english_wikipedia_quality_dataset/datasets/test-set-n3.csv"
+    train_data_path = "readscore/all_score_train-c-output.csv"
+    test_data_path = "readscore/all_score_test-c-output.csv"
     #findBestFeatures(train_data_path, test_data_path)
     executeRandomForest(train_data_path, test_data_path)
     #tuneRandomForest(train_data_path, test_data_path)

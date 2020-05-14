@@ -15,7 +15,9 @@ def tuneRandomForest(train_data_path, test_data_path):
     random = RandomForest([test_data_path, train_data_path])
     random.hyperTuneRandomForest()
 
-
+def roc(train_data_path, test_data_path):
+    random = RandomForest([test_data_path, train_data_path])
+    random.computeROC()
 
 def findBestFeatures(train_data_path, test_data_path):
     # ANOVA feature selection for numeric input and categorical output
@@ -62,5 +64,6 @@ if __name__ == "__main__":
     train_data_path = "readscore/all_score_train-c-output.csv"
     test_data_path = "readscore/all_score_test-c-output.csv"
     #findBestFeatures(train_data_path, test_data_path)
-    executeRandomForest(train_data_path, test_data_path)
+    #executeRandomForest(train_data_path, test_data_path)
     #tuneRandomForest(train_data_path, test_data_path)
+    roc(train_data_path, test_data_path)

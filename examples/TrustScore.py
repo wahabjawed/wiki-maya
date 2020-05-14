@@ -1,27 +1,29 @@
 import json
 import sys
 import math
+import pandas as pd
+import numpy as np
 
 # Constants
-import pandas as pd
-
-c = 0.9
-threshold = 0.25
-phi = 0.1
+C = 0.9
+THRESHOLD = 0.25
+PHI = 0.1
 E = 0.3
 MAX_ATF = 2
 
-sending_value = 0
-maximum_sending_value = 0
-previous_sending_value = 0
 previous_beta = 0
 previous_aggregate_trust = 0
 previous_trend_factor = 0
 previous_adj_atfs = 0
+previous_trend_factor = 0
+previous_send_proportion = 0
+
+previous_sending_value = 0
+previous_trust = 0
 atfs = 0
 
 
-def CalculateSendProportion(sending_proportion):
+def CalculateSendProportion(sending_value, maximum_sending_value):
     return sending_value / maximum_sending_value
 
 
@@ -30,40 +32,47 @@ def CalculateTrust(send_proportion):
 
 
 def CalculateTrustValue(index):
-    previous_send_proportion = CalculateSendProportion(previous_sending_value)
-    send_proportion = CalculateSendProportion(sending_value)
+    global previous_sending_value, previous_adj_atfs, atfs, previous_send_proportion, \
+        previous_trend_factor, previous_trust, previous_beta, previous_aggregate_trust, maximum_sending_value
 
-    previous_trust = CalculateTrust(previous_send_proportion)
+    sending_value = arr[index]
+    if (index > 0):
+        previous_sending_value = arr[index - 1]
+        previous_send_proportion = CalculateSendProportion(previous_sending_value, maximum_sending_value)
+        previous_trust = CalculateTrust(previous_send_proportion)
+
+    send_proportion = CalculateSendProportion(sending_value, maximum_sending_value)
+
     current_trust = CalculateTrust(send_proportion)
 
     current_trust_change = abs(current_trust - previous_trust)
 
-    beta = (c * current_trust_change) + ((1 - c) * previous_beta)
+    beta = (C * current_trust_change) + ((1 - C) * previous_beta)
 
-    alpha = (threshold + ((c * current_trust_change)) / (1 + beta))
+    alpha = (THRESHOLD + (C * current_trust_change) / (1 + beta))
 
     aggregate_trust = (alpha * current_trust) + ((1 - alpha) * previous_aggregate_trust)
 
-    if ((current_trust - aggregate_trust) > E):
-        trend_factor = previous_trend_factor + phi
-    elif ((aggregate_trust - current_trust) > E):
-        trend_factor = previous_trend_factor - phi
+    if (current_trust - aggregate_trust) > E:
+        trend_factor = previous_trend_factor + PHI
+    elif (aggregate_trust - current_trust) > E:
+        trend_factor = previous_trend_factor - PHI
     else:
         trend_factor = previous_trend_factor
 
-    if (atfs > MAX_ATF):
+    if atfs > MAX_ATF:
         adj_atfs = atfs / 2
     else:
         adj_atfs = atfs
 
-    if ((current_trust - aggregate_trust) > phi):
+    if ((current_trust - aggregate_trust) > PHI):
         atfs = previous_adj_atfs + ((current_trust - aggregate_trust) / 2)
-    elif ((aggregate_trust - current_trust) > phi):
+    elif ((aggregate_trust - current_trust) > PHI):
         atfs = previous_adj_atfs + (aggregate_trust - current_trust)
     else:
         atfs = previous_adj_atfs
 
-    if atfs > MAX_ATF:
+    if (atfs > MAX_ATF):
         change_rate = 0
     else:
         change_rate = math.cos((math.pi / 2) * (atfs / MAX_ATF))
@@ -71,6 +80,11 @@ def CalculateTrustValue(index):
     expected_trust = (trend_factor * current_trust) + ((1 - trend_factor) * aggregate_trust)
 
     trust_value = expected_trust * change_rate
+
+    previous_beta = beta
+    previous_aggregate_trust = aggregate_trust
+    previous_trend_factor = trend_factor
+    previous_adj_atfs = adj_atfs
 
     return trust_value
 
@@ -91,8 +105,7 @@ if __name__ == "__main__":
 
     arr = series[graph_for].to_numpy()
 
-    print(arr)
+    # print(arr)
 
-    for i in arr:
-        CalculateTrustValue(i)
-
+    for index in range(len(arr)):
+        print("Trust for value: %0.2f =  %0.2f" % (CalculateTrustValue(index), arr[index]))

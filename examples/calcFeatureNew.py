@@ -5,13 +5,16 @@ from itertools import islice
 
 import language_check
 import pandas as pd
+from textstat import textstat
+#import textstat
+
 from maya.nltk import util
-from maya.nltk.textstats.textstats import textstatistics
 from readcalc import readcalc
 
 
 def calcFeatures(params):
     index, rev = params  # Multiprocessing...
+    global rev_xl
     filename = "/Users/abdulwahab/Desktop/internship/dataset/2015_english_wikipedia_quality_dataset/revisiondata/" + str(
         rev['revid'])
     if (os.path.exists(filename)):
@@ -19,30 +22,26 @@ def calcFeatures(params):
         text = util.read_file(filename)
         text = util.cleanhtml(text)
         assert rev['pageid'] == rev_xl.iloc[index, 0]
-
+        print(rev['revid'],'==cleaned')
         # """
         #     Returns a tuple with:
         #      (number_chars, number_words, number_types, number_sentences, number_syllables, number_polysyllable_words,
-        #         difficult_words, number_words_longer_4, number_words_longer_6, number_words_longer_10,
-        #         number_words_longer_longer_13, flesch_reading_ease, flesch_kincaid_grade_level, coleman_liau_index,
-        #         gunning_fog_index, smog_index, ari_index, lix_index, dale_chall_score)
+        #         number_words_longer_4, number_words_longer_6, number_words_longer_10,
+        #         number_words_longer_longer_13,
+        #          , lix_index, )
         # """
 
-        # pageid, revid, user_rating,
-        # difficult_words, linsear_write_formula, readability_consensus, infonoisescore, logcontentlength, \
-        # logreferences, logpagelinks, numimageslength, num_citetemplates, lognoncitetemplates, num_categories,\
-        # hasinfobox, lvl2headings, lvl3heading
+        #  linsear_write_formula, , readability_consensus, infonoisescore,
+        # logcontentlength, logreferences, logpagelinks, numimageslength, num_citetemplates, lognoncitetemplates,
+        # num_categories, hasinfobox, lvl2headings, lvl3heading
 
-        #flesch_reading_ease, flesch_kincaid_grade, \
-        # smog_index, coleman_liau_index, automated_readability_index, dale_chall_readability_score,gunning_fog_index
+        # calc = readcalc.ReadCalc(text)
+        # t = calc.get_all_metrics()
+        #tool = language_check.LanguageTool('en-US')
+        tt = [round(textstat.linsear_write_formula(text),2)]
+        print(rev['revid'], tt)
+        rev_xl.iloc[index, 33:34] = tt
 
-
-
-
-        calc = readcalc.ReadCalc(text)
-        t = calc.get_all_metrics()
-        tt = [round(var,2) for var in t]
-        rev_xl.iloc[index, 14:35] = tt
         # stat = textstatistics_v2(ctext)
         # stat_val = stat.compute()
         # rev_xl.iloc[index, 18:22] = stat_val
@@ -66,20 +65,19 @@ def clean():
     rev_train.to_csv("readscore/all_score_train-c-output.csv")
 
 
-def calcFeatures():
+def startCalcFeatures():
     # Load rules from incredibly high-tech datastore.
 
-    new_column = ['number_chars', 'number_words', 'number_types', 'number_sentences', 'number_syllables',
-                  'number_polysyllable_words',
-                  'difficult_words', 'number_words_longer_4', 'number_words_longer_6', 'number_words_longer_10',
-                  'number_words_longer_longer_13', 'flesch_reading_ease', 'flesch_kincaid_grade_level',
-                  'coleman_liau_index',
-                  'gunning_fog_index', 'smog_index', 'ari_index', 'lix_index', 'dale_chall_score']
+    # new_column = ['number_chars', 'number_words', 'number_types', 'number_sentences', 'number_syllables',
+    #               'number_polysyllable_words',
+    #               'difficult_words', 'number_words_longer_4', 'number_words_longer_6', 'number_words_longer_10',
+    #               'number_words_longer_longer_13', 'flesch_reading_ease', 'flesch_kincaid_grade_level',
+    #               'coleman_liau_index',
+    #               'gunning_fog_index', 'smog_index', 'ari_index', 'lix_index', 'dale_chall_score','linsear_write_formula']
+    global rev_xl
+    new_column = ['linsear_write_formula']
 
     fileDir = os.path.dirname(os.path.realpath('__file__'))
-
-    rev_xl = pd.read_csv("readscore/all_score_train-c.csv",
-                         dtype={0: 'int32', 1: 'int32', 2: 'object'})
 
     rev_xl = rev_xl.reindex(columns=rev_xl.columns.tolist() + new_column)
 
@@ -95,6 +93,6 @@ def calcFeatures():
 
 
 if __name__ == "__main__":
-    rev_xl = pd.read_csv("readscore/all_score_train-c.csv",
+    rev_xl = pd.read_csv("readscore/all_score_train-c-output.csv",
                          dtype={0: 'int32', 1: 'int32', 2: 'object'})
-    clean()
+    startCalcFeatures()

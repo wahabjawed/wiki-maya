@@ -1,5 +1,7 @@
+from itertools import cycle
 from pprint import pprint
 
+from numpy import interp
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import numpy as np
@@ -7,7 +9,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score, roc_curve, auc
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import cross_val_score, RandomizedSearchCV, KFold
-from sklearn.preprocessing import label_binarize
+from sklearn.preprocessing import label_binarize, MinMaxScaler
 
 
 class RandomForest:
@@ -20,10 +22,6 @@ class RandomForest:
         self.test = pd.read_csv(self.test_data_path)
         self.target_names = self.train['rating'].unique()
 
-        # self.features = ['linsear_write_formula', 'dale_chall_readability_score', 'rix',
-        #                  'spache_readability', 'dale_chall_readability_score_v2', 'reading_time', 'grammar',
-        #                  "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "17", "18",
-        #                  "19"]
 
         self.features = ['infonoisescore', 'logcontentlength', 'logreferences', 'logpagelinks', 'numimageslength',
                          'num_citetemplates', 'lognoncitetemplates',
@@ -33,31 +31,43 @@ class RandomForest:
                          'number_words_longer_6', 'number_words_longer_10',
                          'number_words_longer_longer_13', 'flesch_reading_ease', 'flesch_kincaid_grade_level',
                          'coleman_liau_index',
-                         'gunning_fog_index', 'smog_index', 'ari_index', 'lix_index', 'dale_chall_score']
+                         'gunning_fog_index', 'smog_index', 'ari_index', 'lix_index', 'dale_chall_score',
+                                                                                      'linsear_write_formula']
 
         # self.train_y,self.train_mapping = pd.factorize(self.train['rating'])[0]
         # self.test_y,self.test_mapping = pd.factorize(self.test['rating'])[0]
 
-        cat = pd.Categorical(self.train['rating'], categories=['B', 'C', 'FA', 'GA', 'Start', 'Stub'])
+        cat = pd.Categorical(self.train['rating'], categories=['B', 'C', 'FA', 'GA', 'Start', 'Stub'],ordered=True)
         self.train_y, self.train_mapping = pd.factorize(cat)
 
-        cat = pd.Categorical(self.train['rating'], categories=['B', 'C', 'FA', 'GA', 'Start', 'Stub'])
+        cat = pd.Categorical(self.test['rating'], categories=['B', 'C', 'FA', 'GA', 'Start', 'Stub'],ordered=True)
         self.test_y, self.test_mapping = pd.factorize(cat)
         # print('train: ', len(self.train))
         # print('test: ', len(self.test))
 
+        scaler = MinMaxScaler(feature_range=(0, 1))
+        scaler.fit(self.train[self.features])
+        self.train_mm = scaler.transform(self.train[self.features])
+        self.test_mm = scaler.transform(self.test[self.features])
+
+    def evaluate(self, model):
+        predictions = self.target_names[model.predict(self.test[self.features])]
+        print(pd.crosstab(self.test['rating'], predictions, rownames=['Actual Species'], colnames=['predicted']))
+        print('Classification accuracy without selecting features: {:.3f}'
+              .format(accuracy_score(self.test['rating'], predictions)))
+
     def hyperTuneRandomForest(self):
         # Number of trees in random forest
-        n_estimators = [int(x) for x in np.linspace(start=200, stop=2000, num=10)]
+        n_estimators = [int(x) for x in np.linspace(start=300, stop=800, num=10)]
         # Number of features to consider at every split
         max_features = ['auto', 'sqrt']
         # Maximum number of levels in tree
-        max_depth = [int(x) for x in np.linspace(10, 110, num=11)]
+        max_depth = [int(x) for x in np.linspace(20, 120, num=5)]
         max_depth.append(None)
         # Minimum number of samples required to split a node
-        min_samples_split = [2, 5, 10]
+        min_samples_split = [2, 5, 8,10,12]
         # Minimum number of samples required at each leaf node
-        min_samples_leaf = [1, 2, 4]
+        min_samples_leaf = [1, 2, 4,8]
         # Method of selecting samples for training each tree
         bootstrap = [True, False]
         # Create the random grid
@@ -70,13 +80,15 @@ class RandomForest:
         pprint(random_grid)
 
         self.clf = RandomForestClassifier()
-        rf_random = RandomizedSearchCV(estimator=self.clf, param_distributions=random_grid, n_iter=100, cv=3, verbose=2,
+        rf_random = RandomizedSearchCV(estimator=self.clf, param_distributions=random_grid, n_iter=100, cv=5, verbose=2,
                                        random_state=42, n_jobs=-1)
 
         # Fit the random search model
         rf_random.fit(self.train[self.features], self.train_y)
 
         pprint(rf_random.best_params_)
+
+        self.evaluate(rf_random)
         return rf_random
 
     def learn(self):
@@ -98,16 +110,16 @@ class RandomForest:
                              'coleman_liau_index',
                              'gunning_fog_index', 'smog_index', 'ari_index', 'lix_index', 'dale_chall_score']
 
-        self.clf = RandomForestClassifier(bootstrap=True, n_estimators=400, max_depth=100, n_jobs=5,
-                                          max_features='sqrt',
+        self.clf = RandomForestClassifier(bootstrap=True, n_estimators=450, max_depth=65, n_jobs=5,
+
                                           min_samples_leaf=1, min_samples_split=5, random_state=42)
         self.clf.fit(self.train[self.features], self.train_y)
 
-        kf = KFold(shuffle=True, n_splits=5)
-        scores = cross_val_score(self.clf, self.train[self.features], self.train_y, cv=kf, n_jobs=-1,
-                                 scoring='accuracy')
-        print(scores)
-        print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+        # kf = KFold(shuffle=True, n_splits=5)
+        # scores = cross_val_score(self.clf, self.train[self.features], self.train_y, cv=kf, n_jobs=-1,
+        #                          scoring='accuracy')
+        # print(scores)
+        # print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 
         # self.clf2 = RandomForestClassifier(bootstrap=True,n_estimators=400, max_depth=100, n_jobs=5, max_features='sqrt',
         #                                   min_samples_leaf=1,min_samples_split=5,random_state=42)
@@ -131,15 +143,21 @@ class RandomForest:
 
     def computeROC(self):
         # Binarize the output
-        self.by = label_binarize(self.train_y, classes=[0, 1, 2, 4, 5])
-        self.byy = label_binarize(self.test_y, classes=[0, 1, 2, 4, 5])
+        self.classes = ['B', 'C', 'FA', 'GA', 'Start', 'Stub']
+        self.by = label_binarize(self.train['rating'], classes=self.classes)
+        self.byy = label_binarize(self.test['rating'], classes=self.classes)
         self.n_classes = self.by.shape[1]
 
         self.clf = RandomForestClassifier(bootstrap=True, n_estimators=400, max_depth=100, n_jobs=5,
                                           max_features='sqrt',
                                           min_samples_leaf=1, min_samples_split=5, random_state=42)
 
-        self.y_score = self.clf.fit(self.train[self.features], self.by).decision_function(self.test[self.features])
+        self.y_score = self.clf.fit(self.train[self.features], self.by).predict(self.test[self.features])
+
+        kf = KFold(shuffle=True, n_splits=5)
+        roc_auc_score = cross_val_score(self.clf, self.train[self.features], self.by, cv=kf, scoring='roc_auc')
+        print('roc_auc_score ', np.mean(roc_auc_score), roc_auc_score)
+
 
         # Compute ROC curve and ROC area for each class
         fpr = dict()
@@ -153,16 +171,46 @@ class RandomForest:
         fpr["micro"], tpr["micro"], _ = roc_curve(self.byy.ravel(), self.y_score.ravel())
         roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
 
-        plt.figure()
         lw = 2
-        plt.plot(fpr[2], tpr[2], color='darkorange',
-                 lw=lw, label='ROC curve (area = %0.2f)' % roc_auc[2])
-        plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+        # First aggregate all false positive rates
+        all_fpr = np.unique(np.concatenate([fpr[i] for i in range(self.n_classes)]))
+
+        # Then interpolate all ROC curves at this points
+        mean_tpr = np.zeros_like(all_fpr)
+        for i in range(self.n_classes):
+            mean_tpr += interp(all_fpr, fpr[i], tpr[i])
+
+        # Finally average it and compute AUC
+        mean_tpr /= self.n_classes
+
+        fpr["macro"] = all_fpr
+        tpr["macro"] = mean_tpr
+        roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
+
+        # Plot all ROC curves
+        plt.figure()
+        plt.plot(fpr["micro"], tpr["micro"],
+                 label='micro-average ROC curve (area = {0:0.2f})'
+                       ''.format(roc_auc["micro"]),
+                 color='deeppink', linestyle=':', linewidth=4)
+
+        plt.plot(fpr["macro"], tpr["macro"],
+                 label='macro-average ROC curve (area = {0:0.2f})'
+                       ''.format(roc_auc["macro"]),
+                 color='navy', linestyle=':', linewidth=4)
+
+        colors = cycle(['aqua', 'darkorange', 'cornflowerblue','yellow','pink'])
+        for i, color in zip(range(self.n_classes), colors):
+            plt.plot(fpr[i], tpr[i], color=color, lw=lw,
+                     label='ROC curve of class {0} (area = {1:0.2f})'
+                           ''.format(self.classes[i], roc_auc[i]))
+
+        plt.plot([0, 1], [0, 1], 'k--', lw=lw)
         plt.xlim([0.0, 1.0])
         plt.ylim([0.0, 1.05])
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
-        plt.title('Receiver operating characteristic example')
+        plt.title('Some extension of Receiver operating characteristic to multi-class')
         plt.legend(loc="lower right")
         plt.show()
 
@@ -182,8 +230,4 @@ class RandomForest:
         # print('Classification accuracy with selecting features: {:.3f}'
         #       .format(accuracy_score(self.test['rating'], preds2)))
 
-    def evaluate(self, model):
-        predictions = self.target_names[model.predict(self.test[self.features])]
-        print(pd.crosstab(self.test['rating'], predictions, rownames=['Actual Species'], colnames=['predicted']))
-        print('Classification accuracy without selecting features: {:.3f}'
-              .format(accuracy_score(self.test['rating'], predictions)))
+

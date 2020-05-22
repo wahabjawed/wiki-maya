@@ -11,6 +11,7 @@ PHI = 0.1
 E = 0.3
 MAX_ATF = 2
 
+maximum_sending_value=0
 previous_beta = 0
 previous_aggregate_trust = 0
 previous_trend_factor = 0
@@ -18,7 +19,6 @@ previous_adj_atfs = 0
 previous_trend_factor = 0
 previous_send_proportion = 0
 
-previous_sending_value = 0
 previous_trust = 0
 atfs = 0
 
@@ -28,7 +28,7 @@ def CalculateSendProportion(sending_value, maximum_sending_value):
 
 
 def CalculateTrust(send_proportion):
-    return math.log(send_proportion * ((sys.float_info.epsilon - 1) + 1))
+    return math.log(send_proportion * ((math.e - 1) + 1))
 
 
 def CalculateTrustValue(index):
@@ -36,10 +36,6 @@ def CalculateTrustValue(index):
         previous_trend_factor, previous_trust, previous_beta, previous_aggregate_trust, maximum_sending_value
 
     sending_value = arr[index]
-    if (index > 0):
-        previous_sending_value = arr[index - 1]
-        previous_send_proportion = CalculateSendProportion(previous_sending_value, maximum_sending_value)
-        previous_trust = CalculateTrust(previous_send_proportion)
 
     send_proportion = CalculateSendProportion(sending_value, maximum_sending_value)
 
@@ -49,7 +45,7 @@ def CalculateTrustValue(index):
 
     beta = (C * current_trust_change) + ((1 - C) * previous_beta)
 
-    alpha = (THRESHOLD + (C * current_trust_change) / (1 + beta))
+    alpha = (THRESHOLD + ((C * current_trust_change) / (1 + beta)))
 
     aggregate_trust = (alpha * current_trust) + ((1 - alpha) * previous_aggregate_trust)
 
@@ -85,6 +81,10 @@ def CalculateTrustValue(index):
     previous_aggregate_trust = aggregate_trust
     previous_trend_factor = trend_factor
     previous_adj_atfs = adj_atfs
+    previous_send_proportion = send_proportion
+    previous_trust = current_trust
+
+
 
     return trust_value
 
@@ -106,6 +106,7 @@ if __name__ == "__main__":
     arr = series[graph_for].to_numpy()
 
     # print(arr)
-
+    # arr = [2,3,2,3,2,3,4,2]
+    # maximum_sending_value=4
     for index in range(len(arr)):
         print("Trust for value: %0.2f =  %0.2f" % (CalculateTrustValue(index), arr[index]))

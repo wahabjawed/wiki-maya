@@ -133,7 +133,7 @@ if __name__ == "__main__":
     train_data_path = "readscore/all_score_train-c-output.csv"
     test_data_path = "readscore/all_score_test-c-output.csv"
     #findBestFeatures(train_data_path, test_data_path)
-    executeRandomForest(train_data_path, test_data_path)
+    #executeRandomForest(train_data_path, test_data_path)
     #tuneRandomForest(train_data_path, test_data_path)
     #roc(train_data_path, test_data_path)
     #executeExtraTreeT(train_data_path, test_data_path)
@@ -148,5 +148,5 @@ if __name__ == "__main__":
     #executeGBT(train_data_path, test_data_path)
     #tuneGBT(train_data_path, test_data_path)
     #executeVCH(train_data_path, test_data_path)
-    #executeNNT(train_data_path, test_data_path)
+    executeNNT(train_data_path, test_data_path)
     #executeMMNB(train_data_path, test_data_path)

@@ -12,7 +12,7 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import accuracy_score, roc_auc_score, roc_curve, auc, classification_report
 from keras.models import Sequential
-from keras.layers import Dense, Flatten
+from keras.layers import Dense, Flatten, Dropout
 from sklearn.model_selection import KFold, cross_val_score, GridSearchCV
 from sklearn.preprocessing import MinMaxScaler, label_binarize
 
@@ -35,7 +35,8 @@ class NNT:
                          'number_words_longer_6', 'number_words_longer_10',
                          'number_words_longer_longer_13', 'flesch_reading_ease', 'flesch_kincaid_grade_level',
                          'coleman_liau_index',
-                         'gunning_fog_index', 'smog_index', 'ari_index', 'lix_index', 'dale_chall_score','linsear_write_formula']
+                         'gunning_fog_index', 'smog_index', 'ari_index', 'lix_index', 'dale_chall_score',
+                         'linsear_write_formula']
 
         cat = pd.Categorical(self.train['rating'], categories=['B', 'C', 'FA', 'GA', 'Start', 'Stub'], ordered=True)
         self.train_y, self.train_mapping = pd.factorize(cat)
@@ -44,7 +45,6 @@ class NNT:
         self.test_y, self.test_mapping = pd.factorize(cat)
         # print('train: ', len(self.train))
         # print('test: ', len(self.test))
-
 
         self.classes = ['B', 'C', 'FA', 'GA', 'Start', 'Stub']
         self.by = label_binarize(self.train['rating'], classes=self.classes)
@@ -60,19 +60,20 @@ class NNT:
     # define baseline model
     def baseline_model(self):
         self.clf = Sequential()
-        self.clf.add(Dense(256,input_dim=31, activation='relu'))
-        self.clf.add(Dense(512, activation='relu'))
+        self.clf.add(Dense(128, input_dim=31, activation='relu'))
+        self.clf.add(Dropout(0.1))
+        self.clf.add(Dense(1024, activation='relu'))
         self.clf.add(Dense(6, activation='softmax'))  # Final Layer using Softmax
-
-        self.clf.compile(loss='categorical_crossentropy', optimizer= 'adam', metrics=['accuracy'])
+        optimizer = keras.optimizers.Adamax(lr=0.0015)
+        self.clf.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
         return self.clf
 
     def learn(self):
-        estimator = KerasClassifier(build_fn=self.baseline_model, epochs=30, verbose=2)
-        kfold = KFold(n_splits=5, shuffle=True)
-        results = cross_val_score(estimator, self.train_mm, self.by,
-                                  cv=kfold, error_score='raise')
-        print("Baseline: %.2f%% (%.2f%%)" % (results.mean() * 100, results.std() * 100))
+        estimator = KerasClassifier(build_fn=self.baseline_model, epochs=40, verbose=2)
+        # kfold = KFold(n_splits=5, shuffle=True)
+        # results = cross_val_score(estimator, self.train_mm, self.train_y,
+        #                           cv=kfold, error_score='raise')
+        # print("Baseline: %.2f%% (%.2f%%)" % (results.mean() * 100, results.std() * 100))
 
         estimator.fit(self.train_mm, self.by)
         score = estimator.predict(self.test_mm)

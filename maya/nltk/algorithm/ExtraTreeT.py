@@ -1,26 +1,35 @@
-from itertools import cycle
 from pprint import pprint
 
-from numpy import interp
-from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
-import pandas as pd
 import numpy as np
-from sklearn.metrics import accuracy_score, roc_auc_score, roc_curve, auc
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.model_selection import cross_val_score, RandomizedSearchCV, KFold
-from sklearn.preprocessing import label_binarize, MinMaxScaler
-from sklearn.linear_model import LinearRegression
+import pandas as pd
+from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import RandomizedSearchCV
+from sklearn.preprocessing import MinMaxScaler
 
 
 class ExtraTreeT:
+
+    def score_to_numeric(self, x):
+        if x == 'Stub':
+            return 0
+        if x == 'Start':
+            return 1
+        if x == 'C':
+            return 2
+        if x == 'B':
+            return 3
+        if x == 'GA':
+            return 4
+        if x == 'FA':
+            return 5
 
     def __init__(self, args):
         self.test_data_path = args[0]
         self.train_data_path = args[1]
 
-        self.train = pd.read_csv(self.train_data_path)
-        self.test = pd.read_csv(self.test_data_path)
+        self.train = pd.read_csv(self.train_data_path,low_memory=False)
+        self.test = pd.read_csv(self.test_data_path,low_memory=False)
         self.target_names = self.train['rating'].unique()
 
         self.features = ['infonoisescore', 'logcontentlength', 'logreferences', 'logpagelinks', 'numimageslength',
@@ -32,15 +41,12 @@ class ExtraTreeT:
                          'number_words_longer_longer_13', 'flesch_reading_ease', 'flesch_kincaid_grade_level',
                          'coleman_liau_index',
                          'gunning_fog_index', 'smog_index', 'ari_index', 'lix_index',
-                         'dale_chall_score', 'linsear_write_formula']
+                         'dale_chall_score', 'linsear_write_formula', 'grammar']
 
-        cat = pd.Categorical(self.train['rating'], categories=['B', 'C', 'FA', 'GA', 'Start', 'Stub'], ordered=True)
-        self.train_y, self.train_mapping = pd.factorize(cat)
 
-        cat = pd.Categorical(self.test['rating'], categories=['B', 'C', 'FA', 'GA', 'Start', 'Stub'], ordered=True)
-        self.test_y, self.test_mapping = pd.factorize(cat)
-        # print('train: ', len(self.train))
-        # print('test: ', len(self.test))
+        self.train['score'] = self.train['rating'].apply(self.score_to_numeric)
+        self.test['score'] = self.test['rating'].apply(self.score_to_numeric)
+        self.classes = ['Stub', 'Start', 'C', 'B', 'GA', 'FA']
 
         scaler = MinMaxScaler(feature_range=(0, 1))
         scaler.fit(self.train[self.features])
@@ -83,7 +89,7 @@ class ExtraTreeT:
 
     def learn(self):
         self.clf = ExtraTreesClassifier(n_estimators=300, max_depth=30)
-        self.clf.fit(self.train[self.features], self.train_y)
+        self.clf.fit(self.train[self.features], self.train['score'])
 
         # kf = KFold(shuffle=True, n_splits=5)
         # scores = cross_val_score(self.clf, self.train[self.features], self.train_y, cv=kf, n_jobs=-1,
@@ -94,14 +100,15 @@ class ExtraTreeT:
         return self.clf
 
     def fetchScore(self):
-        preds = self.target_names[self.clf.predict(self.test[self.features])]
-
+        preds = self.clf.predict(self.test[self.features])
+        preds = np.array([self.classes[x] for x in preds])
         print(pd.crosstab(self.test['rating'], preds, rownames=['Actual Species'], colnames=['predicted']))
         print('Classification accuracy without selecting features: {:.3f}'
               .format(accuracy_score(self.test['rating'], preds)))
 
     def evaluate(self, model):
-        predictions = self.target_names[model.predict(self.test[self.features])]
+        predictions = model.predict(self.test[self.features])
+        predictions = np.array([self.classes[x] for x in predictions])
         print(pd.crosstab(self.test['rating'], predictions, rownames=['Actual Species'], colnames=['predicted']))
         print('Classification accuracy without selecting features: {:.3f}'
               .format(accuracy_score(self.test['rating'], predictions)))

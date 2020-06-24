@@ -21,42 +21,47 @@ from sklearn.tree import DecisionTreeClassifier
 
 class GBT:
 
+    def score_to_numeric(self, x):
+        if x == 'Stub':
+            return 0
+        if x == 'Start':
+            return 1
+        if x == 'C':
+            return 2
+        if x == 'B':
+            return 3
+        if x == 'GA':
+            return 4
+        if x == 'FA':
+            return 5
+
     def __init__(self, args):
         self.test_data_path = args[0]
         self.train_data_path = args[1]
 
-        self.train = pd.read_csv(self.train_data_path)
-        self.test = pd.read_csv(self.test_data_path)
-        self.target_names = self.train['rating'].unique()
+        self.train = pd.read_csv(self.train_data_path, low_memory=False)
+        self.test = pd.read_csv(self.test_data_path, low_memory=False)
 
         self.features = ['infonoisescore', 'logcontentlength', 'logreferences', 'logpagelinks', 'numimageslength',
                          'num_citetemplates', 'lognoncitetemplates',
-                         'num_categories', 'hasinfobox', 'lvl2headings', 'lvl3heading', 'number_chars', 'number_words',
+                         'num_categories', 'lvl2headings', 'lvl3heading', 'number_chars', 'number_words',
                          'number_types', 'number_sentences', 'number_syllables',
                          'number_polysyllable_words', 'difficult_words', 'number_words_longer_4',
                          'number_words_longer_6', 'number_words_longer_10',
                          'number_words_longer_longer_13', 'flesch_reading_ease', 'flesch_kincaid_grade_level',
                          'coleman_liau_index',
-                         'gunning_fog_index', 'smog_index', 'ari_index', 'lix_index', 'dale_chall_score']
+                         'gunning_fog_index', 'smog_index', 'ari_index', 'lix_index',
+                         'dale_chall_score', 'linsear_write_formula', 'grammar']
 
-        cat = pd.Categorical(self.train['rating'], categories=['B', 'C', 'FA', 'GA', 'Start', 'Stub'], ordered=True)
-        self.train_y, self.train_mapping = pd.factorize(cat)
+        self.train['score'] = self.train['rating'].apply(self.score_to_numeric)
+        self.test['score'] = self.test['rating'].apply(self.score_to_numeric)
+        self.classes = ['Stub', 'Start', 'C', 'B', 'GA', 'FA']
 
-        cat = pd.Categorical(self.test['rating'], categories=['B', 'C', 'FA', 'GA', 'Start', 'Stub'], ordered=True)
-        self.test_y, self.test_mapping = pd.factorize(cat)
-        # print('train: ', len(self.train))
-        # print('test: ', len(self.test))
-
-        scaler = MinMaxScaler(feature_range=(0, 1))
+        scaler = MinMaxScaler(feature_range=(-1, 1))
         scaler.fit(self.train[self.features])
         self.train_mm = scaler.transform(self.train[self.features])
         self.test_mm = scaler.transform(self.test[self.features])
 
-    def evaluate(self, model):
-        predictions = self.target_names[model.predict(self.test[self.features])]
-        print(pd.crosstab(self.test['rating'], predictions, rownames=['Actual Species'], colnames=['predicted']))
-        print('Classification accuracy without selecting features: {:.3f}'
-              .format(accuracy_score(self.test['rating'], predictions)))
 
     def hyperTune(self):
         # Create the random grid
@@ -64,7 +69,7 @@ class GBT:
         param_grid = {
             'learning_rate': [0.15, 0.2, 0.1, 0.08, 0.07],
             'n_estimators': [125, 135, 145, 150, 165, 175, 185],
-            'max_depth': [int(x) for x in np.linspace(3, 8, 6, endpoint=True)],
+            'max_depth': [int(x) for x in np.linspace(5, 11, 6, endpoint=True)],
             'min_samples_split': [2, 3, 4, 5],
             'min_samples_leaf': [1, 2, 3, 4]}
 
@@ -84,9 +89,10 @@ class GBT:
         return rf_random
 
     def learn(self):
-        self.clf = GradientBoostingClassifier(n_estimators=145, max_depth=6, min_samples_split=3, min_samples_leaf=1,
-                                              learning_rate=0.07)
-        self.clf.fit(self.train_mm, self.train_y)
+        self.clf = GradientBoostingClassifier(n_estimators=155, max_depth=7, min_samples_split=3, min_samples_leaf=1,
+                                               learning_rate=0.07)
+        #self.clf = GradientBoostingClassifier(n_estimators=100, max_depth=6)
+        self.clf.fit(self.train[self.features], self.train['score'])
         # kf = KFold(shuffle=True, n_splits=5)
         # scores = cross_val_score(self.clf, self.train[self.features], self.train_y, cv=kf, n_jobs=-1,
         #                          scoring='accuracy')
@@ -96,9 +102,15 @@ class GBT:
         return self.clf
 
     def fetchScore(self):
-        preds = self.target_names[self.clf.predict(self.test_mm)]
-
+        preds = self.clf.predict(self.test[self.features])
+        preds = np.array([self.classes[x] for x in preds])
         print(pd.crosstab(self.test['rating'], preds, rownames=['Actual Species'], colnames=['predicted']))
         print('Classification accuracy without selecting features: {:.3f}'
               .format(accuracy_score(self.test['rating'], preds)))
-        # print(classification_report(self.test['rating'], preds))
+
+    def evaluate(self, model):
+        predictions = model.predict(self.test[self.features])
+        predictions = np.array([self.classes[x] for x in predictions])
+        print(pd.crosstab(self.test['rating'], predictions, rownames=['Actual Species'], colnames=['predicted']))
+        print('Classification accuracy without selecting features: {:.3f}'
+              .format(accuracy_score(self.test['rating'], predictions)))

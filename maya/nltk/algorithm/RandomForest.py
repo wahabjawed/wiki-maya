@@ -14,6 +14,20 @@ from sklearn.preprocessing import label_binarize, MinMaxScaler
 
 class RandomForest:
 
+    def score_to_numeric(self, x):
+        if x == 'Stub':
+            return 0
+        if x == 'Start':
+            return 1
+        if x == 'C':
+            return 2
+        if x == 'B':
+            return 3
+        if x == 'GA':
+            return 4
+        if x == 'FA':
+            return 5
+
     def __init__(self, args):
         self.test_data_path = args[0]
         self.train_data_path = args[1]
@@ -32,18 +46,21 @@ class RandomForest:
                          'number_words_longer_longer_13', 'flesch_reading_ease', 'flesch_kincaid_grade_level',
                          'coleman_liau_index',
                          'gunning_fog_index', 'smog_index', 'ari_index', 'lix_index', 'dale_chall_score',
-                                                                                      'linsear_write_formula']
+                                                                                      'linsear_write_formula','grammar']
+        self.features_imp = ['infonoisescore', 'logcontentlength', 'logreferences', 'logpagelinks', 'numimageslength',
+                             'num_citetemplates', 'lognoncitetemplates',
+                             'num_categories', 'lvl2headings', 'number_chars', 'number_words',
+                             'number_types', 'number_sentences', 'number_syllables',
+                             'number_polysyllable_words', 'difficult_words', 'number_words_longer_4',
+                             'number_words_longer_6', 'number_words_longer_10',
+                             'number_words_longer_longer_13', 'flesch_reading_ease', 'flesch_kincaid_grade_level',
+                             'coleman_liau_index',
+                             'gunning_fog_index', 'smog_index', 'ari_index', 'lix_index', 'dale_chall_score',
+                             'linsear_write_formula', 'grammar']
 
-        # self.train_y,self.train_mapping = pd.factorize(self.train['rating'])[0]
-        # self.test_y,self.test_mapping = pd.factorize(self.test['rating'])[0]
-
-        cat = pd.Categorical(self.train['rating'], categories=['B', 'C', 'FA', 'GA', 'Start', 'Stub'],ordered=True)
-        self.train_y, self.train_mapping = pd.factorize(cat)
-
-        cat = pd.Categorical(self.test['rating'], categories=['B', 'C', 'FA', 'GA', 'Start', 'Stub'],ordered=True)
-        self.test_y, self.test_mapping = pd.factorize(cat)
-        # print('train: ', len(self.train))
-        # print('test: ', len(self.test))
+        self.train['score'] = self.train['rating'].apply(self.score_to_numeric)
+        self.test['score'] = self.test['rating'].apply(self.score_to_numeric)
+        self.classes = ['Stub', 'Start', 'C', 'B', 'GA', 'FA']
 
         scaler = MinMaxScaler(feature_range=(0, 1))
         scaler.fit(self.train[self.features])
@@ -58,16 +75,16 @@ class RandomForest:
 
     def hyperTuneRandomForest(self):
         # Number of trees in random forest
-        n_estimators = [int(x) for x in np.linspace(start=300, stop=800, num=10)]
+        n_estimators = [int(x) for x in np.linspace(start=300, stop=800, num=25)]
         # Number of features to consider at every split
         max_features = ['auto', 'sqrt']
         # Maximum number of levels in tree
         max_depth = [int(x) for x in np.linspace(20, 120, num=5)]
         max_depth.append(None)
         # Minimum number of samples required to split a node
-        min_samples_split = [2, 5, 8,10,12]
+        min_samples_split = [2, 5, 7]
         # Minimum number of samples required at each leaf node
-        min_samples_leaf = [1, 2, 4,8]
+        min_samples_leaf = [1, 2, 4]
         # Method of selecting samples for training each tree
         bootstrap = [True, False]
         # Create the random grid
@@ -84,7 +101,7 @@ class RandomForest:
                                        random_state=42, n_jobs=-1)
 
         # Fit the random search model
-        rf_random.fit(self.train[self.features], self.train_y)
+        rf_random.fit(self.train[self.features_imp], self.train['score'])
 
         pprint(rf_random.best_params_)
 
@@ -100,20 +117,11 @@ class RandomForest:
         # self.features_imp = ['linsear_write_formula', 'reading_time', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '14', '16', '19']
 
         # from random forest
-        self.features_imp = ['infonoisescore', 'logcontentlength', 'logreferences', 'logpagelinks', 'numimageslength',
-                             'num_citetemplates', 'lognoncitetemplates',
-                             'num_categories', 'lvl2headings', 'lvl3heading', 'number_chars', 'number_words',
-                             'number_types', 'number_sentences', 'number_syllables',
-                             'number_polysyllable_words', 'difficult_words', 'number_words_longer_4',
-                             'number_words_longer_6', 'number_words_longer_10',
-                             'number_words_longer_longer_13', 'flesch_reading_ease', 'flesch_kincaid_grade_level',
-                             'coleman_liau_index',
-                             'gunning_fog_index', 'smog_index', 'ari_index', 'lix_index', 'dale_chall_score']
 
-        self.clf = RandomForestClassifier(bootstrap=True, n_estimators=450, max_depth=65, n_jobs=5,
+        self.clf = RandomForestClassifier(bootstrap=True, n_estimators=450, max_depth=55, n_jobs=5,
+                                          random_state=42)
 
-                                          min_samples_leaf=1, min_samples_split=5, random_state=42)
-        self.clf.fit(self.train[self.features], self.train_y)
+        self.clf.fit(self.train_mm, self.train['score'])
 
         # kf = KFold(shuffle=True, n_splits=5)
         # scores = cross_val_score(self.clf, self.train[self.features], self.train_y, cv=kf, n_jobs=-1,
@@ -218,7 +226,8 @@ class RandomForest:
         # self.clf.predict(self.test[self.features])
         # #
         # self.clf.predict_proba(self.test[self.features])[0:10]
-        preds = self.target_names[self.clf.predict(self.test[self.features])]
+        preds = self.clf.predict(self.test_mm)
+        preds = np.array([self.classes[x] for x in preds])
         # preds2 = self.target_names[self.clf2.predict(self.test[self.features_imp])]
         #
         # print(preds[0:5])

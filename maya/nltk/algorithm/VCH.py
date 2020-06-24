@@ -1,29 +1,44 @@
-from itertools import cycle
 from pprint import pprint
-from scipy.stats import randint
+import keras
+from pprint import pprint
 
-from numpy import interp
-from sklearn.ensemble import RandomForestClassifier, VotingClassifier, GradientBoostingClassifier
-import pandas as pd
+import keras
 import numpy as np
+import pandas as pd
+from keras import Sequential
+from keras.layers import Dense
+from keras.wrappers.scikit_learn import KerasClassifier
+from sklearn.ensemble import RandomForestClassifier, VotingClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, roc_auc_score, roc_curve, auc, classification_report
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.model_selection import cross_val_score, RandomizedSearchCV, KFold, GridSearchCV
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import RandomizedSearchCV
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import label_binarize, MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.tree import DecisionTreeClassifier
 
 
 class VCH:
 
+    def score_to_numeric(self, x):
+        if x == 'Stub':
+            return 0
+        if x == 'Start':
+            return 1
+        if x == 'C':
+            return 2
+        if x == 'B':
+            return 3
+        if x == 'GA':
+            return 4
+        if x == 'FA':
+            return 5
+
     def __init__(self, args):
         self.test_data_path = args[0]
         self.train_data_path = args[1]
 
-        self.train = pd.read_csv(self.train_data_path)
-        self.test = pd.read_csv(self.test_data_path)
+        self.train = pd.read_csv(self.train_data_path, low_memory=False)
+        self.test = pd.read_csv(self.test_data_path, low_memory=False)
         self.target_names = self.train['rating'].unique()
 
         self.features = ['infonoisescore', 'logcontentlength', 'logreferences', 'logpagelinks', 'numimageslength',
@@ -34,67 +49,51 @@ class VCH:
                          'number_words_longer_6', 'number_words_longer_10',
                          'number_words_longer_longer_13', 'flesch_reading_ease', 'flesch_kincaid_grade_level',
                          'coleman_liau_index',
-                         'gunning_fog_index', 'smog_index', 'ari_index', 'lix_index', 'dale_chall_score','linsear_write_formula']
+                         'gunning_fog_index', 'smog_index', 'ari_index', 'lix_index',
+                         'dale_chall_score', 'linsear_write_formula', 'grammar']
 
-        cat = pd.Categorical(self.train['rating'], categories=['B', 'C', 'FA', 'GA', 'Start', 'Stub'], ordered=True)
-        self.train_y, self.train_mapping = pd.factorize(cat)
+        self.train['score'] = self.train['rating'].apply(self.score_to_numeric)
+        self.test['score'] = self.test['rating'].apply(self.score_to_numeric)
+        self.classes = ['Stub', 'Start', 'C', 'B', 'GA', 'FA']
 
-        cat = pd.Categorical(self.test['rating'], categories=['B', 'C', 'FA', 'GA', 'Start', 'Stub'], ordered=True)
-        self.test_y, self.test_mapping = pd.factorize(cat)
-        # print('train: ', len(self.train))
-        # print('test: ', len(self.test))
-
-        scaler = MinMaxScaler(feature_range=(0, 1))
+        scaler = MinMaxScaler(feature_range=(-1, 1))
         scaler.fit(self.train[self.features])
         self.train_mm = scaler.transform(self.train[self.features])
         self.test_mm = scaler.transform(self.test[self.features])
 
-    def evaluate(self, model):
-        predictions = self.target_names[model.predict(self.test[self.features])]
-        print(pd.crosstab(self.test['rating'], predictions, rownames=['Actual Species'], colnames=['predicted']))
-        print('Classification accuracy without selecting features: {:.3f}'
-              .format(accuracy_score(self.test['rating'], predictions)))
 
-    def hyperTune(self):
 
-        # Create the random grid
-        # Setup the parameters and distributions to sample from: param_dist
-        param_dist = {"max_depth": np.linspace(1, 32, 32, endpoint=True),
-                      'min_samples_splits': np.linspace(0.1, 1.0, 10, endpoint=True),
-                      'min_samples_leafs': np.linspace(0.1, 0.5, 5, endpoint=True),
-                      "criterion": ["gini", "entropy"]}
-        pprint(param_dist)
 
-        self.clf = DecisionTreeClassifier()
-        rf_random = RandomizedSearchCV(estimator=self.clf, n_iter=200, param_distributions=param_dist, cv=5, verbose=2,
-                                       n_jobs=-1)
-
-        # Fit the random search model
-        rf_random.fit(self.train[self.features], self.train_y)
-
-        pprint(rf_random.best_params_)
-        print("Best score is {}".format(rf_random.best_score_))
-
-        self.evaluate(rf_random)
-        return rf_random
+    # define baseline model
+    def baseline_model(self):
+        self.clf = Sequential()
+        self.clf.add(Dense(128, input_dim=32, activation='relu'))
+        self.clf.add(Dense(1024, activation='relu'))
+        # self.clf.add(Dropout(0.1))
+        self.clf.add(Dense(6, activation='softmax'))  # Final Layer using Softmax
+        optimizer = keras.optimizers.Adamax(lr=0.0015)
+        self.clf.compile(loss='sparse_categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+        return self.clf
 
     def learn(self):
         # group / ensemble of models
         estimator = []
         estimator.append(('KNN',KNeighborsClassifier(n_neighbors=12,p=6)))
         estimator.append(('LR',
-                          LogisticRegression(multi_class='multinomial', solver='newton-cg',max_iter=300)))
-        estimator.append(('RFC', RandomForestClassifier(bootstrap=True, n_estimators=400, max_depth=100, n_jobs=5,
-                                          max_features='sqrt',
+                          LogisticRegression(multi_class='multinomial', solver='newton-cg',max_iter=275)))
+        estimator.append(('RFC', RandomForestClassifier(bootstrap=True, n_estimators=450, max_depth=65, n_jobs=5,
                                           min_samples_leaf=1, min_samples_split=5, random_state=42)))
-        estimator.append(('GB',  GradientBoostingClassifier(n_estimators=175, max_depth=8)))
+        estimator.append(('GB',  GradientBoostingClassifier(n_estimators=145, max_depth=6, min_samples_split=3, min_samples_leaf=1,
+                                              learning_rate=0.07)))
+        estimator.append(('NN',  KerasClassifier(build_fn=self.baseline_model, epochs=35, verbose=2)))
 
         # Voting Classifier with hard voting
         self.clf = VotingClassifier(estimators=estimator, voting='hard')
-        self.clf.fit(self.train_mm, self.train_y)
-        y_pred = self.target_names[self.clf.predict(self.test_mm)]
-
+        self.clf.fit(self.train[self.features], self.train['score'])
+        y_pred = self.clf.predict(self.test[self.features])
+        y_pred = np.array([self.classes[x] for x in y_pred])
         print(y_pred)
+
         # using accuracy_score metric to predict accuracy
         print(pd.crosstab(self.test['rating'], y_pred, rownames=['Actual Species'], colnames=['predicted']))
         print('Classification accuracy hard: {:.3f}'
@@ -102,8 +101,9 @@ class VCH:
 
         # Voting Classifier with soft voting
         self.clf = VotingClassifier(estimators=estimator, voting='soft')
-        self.clf.fit(self.train_mm, self.train_y)
-        y_pred = self.target_names[self.clf.predict(self.test_mm)]
+        self.clf.fit(self.train_mm, self.train['score'])
+        y_pred = self.clf.predict(self.test_mm)
+        y_pred = np.array([self.classes[x] for x in y_pred])
         print(y_pred)
         # using accuracy_score metric to predict accuracy
         print(pd.crosstab(self.test['rating'], y_pred, rownames=['Actual Species'], colnames=['predicted']))
@@ -113,11 +113,17 @@ class VCH:
 
 
     def fetchScore(self):
-        preds = self.target_names[self.clf.predict(self.test[self.features])]
-
+        preds = self.clf.predict(self.test[self.features])
+        preds = np.array([self.classes[x] for x in preds])
         print(pd.crosstab(self.test['rating'], preds, rownames=['Actual Species'], colnames=['predicted']))
         print('Classification accuracy without selecting features: {:.3f}'
               .format(accuracy_score(self.test['rating'], preds)))
-        # print(classification_report(self.test['rating'], preds))
+
+    def evaluate(self, model):
+        predictions = model.predict(self.test[self.features])
+        predictions = np.array([self.classes[x] for x in predictions])
+        print(pd.crosstab(self.test['rating'], predictions, rownames=['Actual Species'], colnames=['predicted']))
+        print('Classification accuracy without selecting features: {:.3f}'
+              .format(accuracy_score(self.test['rating'], predictions)))
 
 

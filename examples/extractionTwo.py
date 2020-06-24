@@ -3,8 +3,13 @@ import sys
 from itertools import islice
 import dateparser
 from dateutil.parser import parser
+from sklearn import metrics
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
 from textstat import textstat
 from gensim.parsing.preprocessing import remove_stopwords
+
+from examples.TrustScore import TrustScore
 from maya.nltk import util
 import numpy as np
 import glob
@@ -123,7 +128,7 @@ def getUserContrib(userid):
                     with open('rev_user/' + str(id['revid']), 'w') as outfile:
                         outfile.write(id['slots']['main']["*"])
                 except:
-                    print("erreo: ", values)
+                    print("erreo: ", id)
 
             values.pop(0)
             if contrib['parentid'] > 0:
@@ -137,29 +142,6 @@ def getUserContrib(userid):
     print(rev_data)
     with open('rev_user/data/rev_list_' + userid + '.json', 'w') as outfile:
         json.dump(rev_data, outfile)
-
-
-###### structure user revision ########
-def getUserContribLast(userid):
-    with open('rev_user/data/rev_list_' + userid + '-co.json', 'r') as infile:
-        updated_data = json.loads(infile.read())
-
-    for contrib in updated_data:
-        # d= dict(filter(lambda i:i[0] in ['pageid','revid','parentid'], contrib.items()()))
-        print(contrib)
-
-        values = api_extractor.get_all_revision_of_page_prop(contrib['pageid'],
-                                                             rvprop={'ids', 'timestamp', 'userid', 'content'},
-                                                             rv_limit=1, rv_dir='older',
-                                                             should_continue=False)
-        values = values[0][0]
-        with open('rev_user/' + str(values['revid']), 'w') as outfile:
-            outfile.write(values['slots']['main']["*"])
-
-        contrib['last_rev_id'] = values['revid']
-
-    with open('rev_user/data/rev_list_' + userid + '-col.json', 'w') as outfile:
-        json.dump(updated_data, outfile)
 
 
 ######## organize list #########
@@ -252,7 +234,7 @@ def calcDiff(userid):
             temp['originaltext'] = original_text
 
             rev = [i for i in temp['next_rev']]
-            if total > 7 and len(rev) > 5:
+            if total > 10 and len(rev) > 7:
                 start_time = dateparser.parse(temp['timestamp'])
                 print([temp['pageid'], temp['parentid'], temp['revid'], total])
                 index = 0
@@ -260,7 +242,7 @@ def calcDiff(userid):
                     try:
                         rev_txt = util.read_file('rev_user/' + str(id['revid']))
                         ratio = util.textPreservedRatio(original_text, rev_txt, total)
-                        if ratio < 0.6 and captureLongevity:
+                        if ratio < 0.4 and captureLongevity:
                             end_time = dateparser.parse(id['timestamp'])
                             temp['longevity'] = round((end_time - start_time).total_seconds() / 3600, 2)
                             temp['longevityRev'] = index
@@ -269,7 +251,7 @@ def calcDiff(userid):
                         id['matchRatio'] = ratio
                     except:
                         print("file error")
-                        index-=1
+                        index -= 1
                     index += 1
                 if captureLongevity:
                     temp['longevityRev'] = index
@@ -284,101 +266,81 @@ def calcDiff(userid):
 
 
 def plotGraph(userid):
-    with open('rev_user/data/rev_list_' + userid + '-dp.json', 'r') as infile:
+    with open('rev_user/data/rev_list_36440187-dp.json', 'r') as infile:
         data = json.loads(infile.read())
     for d in data:
         del d['next_rev']
 
     graph_for = "longevityRev"
 
-    series = pd.DataFrame(data=data)
-    series = series[['pageid', 'timestamp', graph_for]]
-    series = series[series.longevityRev >4]
-    series = series.head(70)
+    series1 = pd.DataFrame(data=data)
+    series1 = series1[['pageid', 'timestamp', graph_for]]
+    series1 = series1[series1.longevityRev >= 0]
+    series1['longevityRevP'] = series1['longevityRev'].shift(1)
+    y = TrustScore([series1['longevityRev'], 24]).calculate()
 
-    print(series)
-
-    plot = pyplot.plot(series['timestamp'], series[graph_for], 'b-o')
-
-    # for row in series.iterrows():
-    #     if row[1][graph_for] > 1000:
-    #         pyplot.annotate(row[1]['pageid'], (row[1]['timestamp'], row[1][graph_for]))
-
-    pyplot.xticks(rotation=45, ha='right')
-    pyplot.xlabel("Timestamp")
-    pyplot.ylabel("Longevity (No. of Revisions)")
-    ax = pyplot.gca()
-
-    pyplot.yticks(np.arange(0, 24 + 1, 2.0))
-
-    #ax.yaxis.set_major_locator(pyplot.MaxNLocator(15))
-    ax.set_xticklabels([])
-    pyplot.show()
-
-
-def plotGraphFour(userid):
-    with open('rev_user/data/rev_list_' + userid + '-dp.json', 'r') as infile:
+    with open('rev_user/data/rev_list_39180130-dp.json', 'r') as infile:
         data = json.loads(infile.read())
     for d in data:
         del d['next_rev']
 
-    graph_for = "size"
+    series2 = pd.DataFrame(data=data)
+    series2 = series2[['pageid', 'timestamp', graph_for]]
+    series2 = series2[series2.longevityRev >= 0]
+    series2['longevityRevP'] = series2['longevityRev'].shift(1)
+    y.extend(TrustScore([series2['longevityRev'], 24]).calculate())
 
-    series = pd.DataFrame(data=data)
-    series = series[['pageid', 'timestamp', graph_for]]
-    series = series[series['size'] > 4000]
-
-    plot = pyplot.plot(series['timestamp'], series[graph_for], 'b-o')
-
-    # for row in series.iterrows():
-    #     if row[1][graph_for] > 70000:
-    #         pyplot.annotate(row[1]['pageid'], (row[1]['timestamp'], row[1][graph_for]))
-
-    pyplot.xticks(rotation=45, ha='right')
-    pyplot.xlabel("Timestamp")
-    pyplot.ylabel("User Contribution (size)")
-    pyplot.show()
-
-
-def plotGraphThree(userid):
-    with open('rev_user/data/rev_list_' + userid + '-dp.json', 'r') as infile:
+    with open('rev_user/data/rev_list_415269-dp.json', 'r') as infile:
         data = json.loads(infile.read())
     for d in data:
         del d['next_rev']
 
-    graph_for = "longevity"
+    series3 = pd.DataFrame(data=data)
+    series3 = series3[['pageid', 'timestamp', graph_for]]
+    series3 = series3[series3.longevityRev >= 1]
+    series3['longevityRevP'] = series3['longevityRev'].shift(1)
 
-    series = pd.DataFrame(data=data)
-    series = series[['userContrib', 'timestamp', graph_for]]
-    series = series[series.longevity > 0]
+    y.extend(TrustScore([series3['longevityRev'], 24]).calculate())
 
-    ax = pyplot.axes(projection='3d')
+    series1 = series1.append(series2)
+    series1 = series1.append(series3)
+    series1["longevityRevP"] = series1["longevityRevP"].fillna(0)
+    series1["Trust"] = y
+    series1['TrustP'] = series1['Trust'].shift(1)
+    series1["TrustP"] = series1["TrustP"].fillna(0)
 
-    # Data for three-dimensional scattered points
-    xdata = series['timestamp']
-    zdata = series['userContrib']
-    ydata = series[graph_for]
-    ax.scatter3D(xdata, ydata, zdata, c=zdata, cmap='Greens')
+    X_train, X_test, y_train, y_test = train_test_split(
+        series1[['Trust', 'longevityRevP', 'TrustP']].values.reshape(-1, 3),
+        series1['longevityRev'].values.reshape(-1, 1), test_size=0.10, random_state=3)
 
-    pyplot.xlabel("Timestamp")
-    pyplot.ylabel("Longevity ( Mins)")
+    regressor = LinearRegression()
+    regressor.fit(X_train, y_train)
+
+    # To retrieve the intercept:
+    print(regressor.intercept_)
+    # For retrieving the slope:
+    print(regressor.coef_)
+
+    y_pred = regressor.predict(X_test)
+
+    y_pred = y_pred.reshape(1,-1)[0]
+    y_test = y_test.reshape(1,-1)[0]
+
+    df = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred})
+
+    print('Mean Absolute Error:', metrics.mean_absolute_error(y_test, y_pred))
+    print('R2 Score:', metrics.r2_score(y_test, y_pred))
+    print('Mean Squared Error:', metrics.mean_squared_error(y_test, y_pred))
+    print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
+
+    df.plot(kind='bar', figsize=(10, 8))
+    pyplot.grid(which='major', linestyle='-', linewidth='0.5', color='green')
+    pyplot.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
+    pyplot.xlabel("Samples")
+    pyplot.ylabel("Longevity (Revision)")
     pyplot.show()
 
 
-def plotGraphTwo(userid):
-    with open('rev_user/data/rev_list_' + userid + '-dp.json', 'r') as infile:
-        data = json.loads(infile.read())
-    for d in data:
-        if "longevity" in d.keys():
-            toPlot = d['next_rev']
-            print("plotting for page: ", d['pageid'])
-            mr = [round(mr['matchRatio'] * 100, 2) for mr in toPlot]
-            ts = [ts['timestamp'] for ts in toPlot]
-            pyplot.plot(ts, mr, label=d['pageid'])
-
-    pyplot.xlabel("Timestamp", rotation=90)
-    pyplot.ylabel("Longevity")
-    pyplot.show()
 
 
 def getPlainText(pageID):
@@ -387,50 +349,24 @@ def getPlainText(pageID):
         outfile.write(txt['query']['pages'][pageID]['extract'])
 
 
-def testFeature():
-    rev_text = []
-    fileDir = os.path.dirname(os.path.realpath('__file__'))
-    rev_files = glob.glob("/Users/abdulwahab/Desktop/internship/wikipedia_analysis-master/lang_model/enwiki/text/*")
-    for file in rev_files:
-        file_name = os.path.basename(file)
-        rev_text.append((file_name, file))
-
-    rev_xl = pd.read_csv("/Users/abdulwahab/Desktop/internship/wikipedia_analysis-master/analysis/all_score_train.csv",
-                         dtype={0: 'int32', 1: 'int32', 2: 'object'})
-
-    for index, row in rev_xl.iterrows():
-        filename = "/Users/abdulwahab/Desktop/internship/dataset/2015_english_wikipedia_quality_dataset/revisiondata/" + str(
-            row['revid'])
-        if (os.path.exists(filename)):
-            print(str(row['revid']))
-            text = util.read_file(filename)
-            filtered_sentence = text
-            # filtered_sentence = remove_stopwords(text)
-
-            # print(filtered_sentence)
-            result = [textstat.flesch_reading_ease(filtered_sentence), textstat.flesch_kincaid_grade(filtered_sentence),
-                      textstat.smog_index(filtered_sentence),
-                      textstat.coleman_liau_index(filtered_sentence)]
-
-            # print(result)
-            #
-            # filtered_sentence = util.cleanhtml(filtered_sentence)
-            # result = [textstat.flesch_reading_ease(filtered_sentence), textstat.flesch_kincaid_grade(filtered_sentence), textstat.smog_index(filtered_sentence),
-            #           textstat.coleman_liau_index(filtered_sentence)]
-
-            print(result)
-
-
 if __name__ == "__main__":
+    # good user Nick-D
+    userid = '29047545'
 
+    # 29047545 CPA-5
 
-    userid = '415269'  #vandal
-    #userid = '5834659'  #celio
-    #getUserContribLast(userid)
-    #getUserContrib(userid)
-    #organizeData(userid)
+    # vandal -- blocked  Kujidamanbomb 39116775
+    # spammer -- blocked "user": "Zozazaroo", "userid": 36440187,
+
+    # once vandal -- Serols  -- 9929111
+    # "user": "XxPixel WarriorxX",
+    # "userid": 39180130,  did vandal on dolly
+
+    # getUserContribLast(userid)
+    # getUserContrib(userid)
+    # organizeData(userid)
     # getUserContribPercentage(5834659)
-    #calcDiff(userid)
+    # calcDiff(userid)
     # organizeDataTwo('5834659')
     # plotGraphFour(userid)
     plotGraph(userid)

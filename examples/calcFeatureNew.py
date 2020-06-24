@@ -5,8 +5,6 @@ from itertools import islice
 
 import language_check
 import pandas as pd
-from textstat import textstat
-#import textstat
 
 from maya.nltk import util
 from readcalc import readcalc
@@ -22,6 +20,7 @@ def calcFeatures(params):
         text = util.read_file(filename)
         text = util.cleanhtml(text)
         assert rev['pageid'] == rev_xl.iloc[index, 0]
+        print("matched ",rev['revid'])
         print(rev['revid'],'==cleaned')
         # """
         #     Returns a tuple with:
@@ -37,14 +36,15 @@ def calcFeatures(params):
 
         # calc = readcalc.ReadCalc(text)
         # t = calc.get_all_metrics()
-        #tool = language_check.LanguageTool('en-US')
-        tt = [round(textstat.linsear_write_formula(text),2)]
-        print(rev['revid'], tt)
-        rev_xl.iloc[index, 33:34] = tt
 
-        # stat = textstatistics_v2(ctext)
-        # stat_val = stat.compute()
-        # rev_xl.iloc[index, 18:22] = stat_val
+        tool = language_check.LanguageTool('en-US')
+        text = u'A sentence with a error in the Hitchhiker’s Guide tot he Galaxy'
+        matches = tool.check(text)
+        len(matches)
+
+        tt = [round(util.check_grammar_error_rate_o(tool,text),2)]
+        print(rev['revid'], tt)
+        rev_xl.iloc[index, 34:35] = tt
 
         return rev_xl.iloc[index, :]
 
@@ -75,9 +75,7 @@ def startCalcFeatures():
     #               'coleman_liau_index',
     #               'gunning_fog_index', 'smog_index', 'ari_index', 'lix_index', 'dale_chall_score','linsear_write_formula']
     global rev_xl
-    new_column = ['linsear_write_formula']
-
-    fileDir = os.path.dirname(os.path.realpath('__file__'))
+    new_column = ['grammar']
 
     rev_xl = rev_xl.reindex(columns=rev_xl.columns.tolist() + new_column)
 
@@ -85,8 +83,8 @@ def startCalcFeatures():
 
     # Perform classification.
     with multiprocessing.Pool() as p:
-        # result = p.map(calcFeatures, islice(rev_xl.iterrows(), 5))
-        result = p.map(calcFeatures, rev_xl.iterrows())
+        result = p.map(calcFeatures, islice(rev_xl.iterrows(), 5))
+        #result = p.map(calcFeatures, rev_xl.iterrows())
 
     final = pd.DataFrame(data=result)
     final.to_csv("readscore/all_score_train-c-output.csv")

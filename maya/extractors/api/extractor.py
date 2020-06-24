@@ -140,7 +140,7 @@ class Extractor(BaseExtractor):
                 parentids_to_lookup = []
                 for rev_id, rev_cache in caches.items():
                     if self.revision.doc in rev_cache and \
-                       self.revision.parent.doc not in rev_cache:
+                            self.revision.parent.doc not in rev_cache:
                         rev_doc = rev_cache[self.revision.doc]
                         parent_id = rev_cache.get(
                             revision_oriented.revision.parent.id,
@@ -154,7 +154,7 @@ class Extractor(BaseExtractor):
 
                 for rev_id, rev_cache in caches.items():
                     if self.revision.doc in rev_cache and \
-                       self.revision.parent.doc not in rev_cache:
+                            self.revision.parent.doc not in rev_cache:
                         rev_doc = rev_cache[self.revision.doc]
                         parent_id = rev_cache.get(
                             revision_oriented.revision.parent.id,
@@ -174,7 +174,7 @@ class Extractor(BaseExtractor):
                 user_texts_to_lookup = set()
                 for rev_id, rev_cache in caches.items():
                     if self.revision.doc in rev_cache and \
-                       self.revision.user.info.doc not in rev_cache:
+                            self.revision.user.info.doc not in rev_cache:
                         rev_doc = rev_cache[self.revision.doc]
                         if rev_doc.get('userid', 0) > 0:
                             user_texts_to_lookup.add(rev_doc.get('user'))
@@ -186,7 +186,7 @@ class Extractor(BaseExtractor):
 
                 for rev_id, rev_cache in caches.items():
                     if self.revision.doc in rev_cache and \
-                       self.revision.user.info.doc not in rev_cache:
+                            self.revision.user.info.doc not in rev_cache:
                         rev_doc = rev_cache[self.revision.doc]
                         if rev_doc.get('userid', 0) > 0:
                             user_text = rev_doc.get('user')
@@ -250,7 +250,6 @@ class Extractor(BaseExtractor):
                                        exsectionformat='plain')
 
                 page_doc = doc['query'].get('pages', {}).values()
-
 
         # return {rd['pageid']: rd for rd in page_doc}
         return doc
@@ -326,8 +325,8 @@ class Extractor(BaseExtractor):
         while is_continue:
 
             doc = self.session.get(action="query", list="allrevisions",
-                               pageids=page_id, arvlimit=50,
-                               arvprop=rvprop, arvcontinue=rvcontinue, arvslots="*")
+                                   pageids=page_id, arvlimit=50,
+                                   arvprop=rvprop, arvcontinue=rvcontinue, arvslots="*")
 
             rev_docs.append(list(doc['query']['allrevisions']))
 
@@ -336,15 +335,14 @@ class Extractor(BaseExtractor):
             else:
                 is_continue = False
 
-
-
         if len(rev_docs) > 0:
             return rev_docs
         else:
             # It's OK to not find a revision here.
             return None
 
-    def get_all_revision_of_page_prop(self, page_id, rvprop={'ids', 'timestamp', 'size', 'userid', 'content'}, rv_dir="newer",
+    def get_all_revision_of_page_prop(self, page_id, rvprop={'ids', 'timestamp', 'size', 'userid', 'content'},
+                                      rv_dir="newer",
                                       rv_limit=50, rv_start=None, rvstartid=None, should_continue=True):
         if page_id is None:
             return None
@@ -358,8 +356,8 @@ class Extractor(BaseExtractor):
 
         while is_continue:
             doc = self.session.get(action="query", prop="revisions",
-                               pageids=page_id, rvlimit=rv_limit, rvdir=rv_dir,
-                               rvprop=rvprop, rvcontinue=rvcontinue, rvstartid=rvstartid, rvslots="*")
+                                   pageids=page_id, rvlimit=rv_limit, rvdir=rv_dir,
+                                   rvprop=rvprop, rvcontinue=rvcontinue, rvstartid=rvstartid, rvslots="*")
 
             page_doc = doc['query'].get('pages', {'revisions': []}).values()
             rev_docs.append(list(page_doc)[0]['revisions'])
@@ -386,11 +384,13 @@ class Extractor(BaseExtractor):
         user_contrib = list()
         uccontinue = None
 
-        while is_continue:
+        index = 0
+
+        while is_continue and index <10:
 
             doc = self.session.get(action="query", list="usercontribs",
-                               ucuserids=user_id, uclimit=50, ucdir="newer",
-                               ucprop=ucprop, uccontinue=uccontinue)
+                                   ucuserids=user_id, uclimit=50, ucdir="newer",
+                                   ucprop=ucprop, uccontinue=uccontinue)
 
             user_contrib.append(list(doc['query']['usercontribs']))
 
@@ -398,7 +398,8 @@ class Extractor(BaseExtractor):
                 uccontinue = doc['continue']['uccontinue']
             else:
                 is_continue = False
-
+            print("iteraton: ",index)
+            index += 1
 
         if len(user_contrib) > 0:
             return user_contrib

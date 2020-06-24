@@ -93,10 +93,19 @@ def named_entity_recognition(text):
     return ner
 
 
-def check_grammar_error_rate_o(text):
-    tool = language_check.LanguageTool('en-US')
+def check_grammar_error_rate_o(tool,text):
     matches = tool.check(text)
-    return len(matches) / len(word_tokenize(text))
+    try:
+        return (len(matches) / len(word_tokenize(text)))*100
+    except:
+        return 0
+
+def check_grammar_error_rate_s(tool,text):
+    matches = tool.check(text)
+    try:
+        return (len(matches) / len(sent_tokenize(text)))
+    except:
+        return 0
 
 
 def check_grammar_error_rate(tool, text, count):

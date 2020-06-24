@@ -95,7 +95,6 @@ class CARTT:
         print(pd.crosstab(self.test['rating'], preds, rownames=['Actual Species'], colnames=['predicted']))
         print('Classification accuracy without selecting features: {:.3f}'
               .format(accuracy_score(self.test['rating'], preds)))
-        # print(classification_report(self.test['rating'], preds))
 
     def evaluate(self, model):
         predictions = self.target_names[model.predict(self.test[self.features])]

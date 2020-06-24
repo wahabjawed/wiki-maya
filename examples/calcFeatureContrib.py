@@ -87,8 +87,3 @@ if __name__ == "__main__":
     api_extractor = api.Extractor(session)
     existingContrib = dict()
     startCalcFeatures()
-    # rev_xl = rev_xl[rev_xl['userID'] != 0.0]
-    # rr= rev_xl.groupby('userID')['userID'].value_counts()
-    # rr.to_csv("readscore/user-count.csv")
-    # rev =rev_xl.groupby('userID')['pageid'].value_counts()
-    # rev.to_csv("readscore/user-contrib-count.csv")

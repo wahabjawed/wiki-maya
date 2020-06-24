@@ -67,9 +67,3 @@ if __name__ == "__main__":
     trust = TrustScore([rev_xl['userContrib'], 100]).calculate()
 
     plotGraph(rev_xl['timestamp'], trust)
-#    rr.to_csv("readscore/data-3188459.csv")
-
-    # rr = rev_xl.groupby('userID')['userID'].value_counts()
-    # rr.to_csv("readscore/user-count.csv")
-    # rev = rev_xl.groupby('userID')['pageid'].value_counts()
-    # rev.to_csv("readscore/user-contrib-count.csv")

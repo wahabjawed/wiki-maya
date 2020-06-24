@@ -1,43 +1,24 @@
 from itertools import cycle
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import tensorflow as tf
-from numpy import interp
-from tensorflow.keras.callbacks import Callback
-from tensorflow.keras.layers import Dense, Dropout,LeakyReLU
-from tensorflow.keras.models import Sequential
 from keras.wrappers.scikit_learn import KerasClassifier
-from sklearn.metrics import accuracy_score, roc_auc_score, auc, roc_curve
-from sklearn.model_selection import GridSearchCV, KFold, cross_val_score
+from numpy import interp
+from sklearn.metrics import auc, roc_curve
+from sklearn.model_selection import KFold, train_test_split
 from sklearn.preprocessing import MinMaxScaler, label_binarize
-from tensorflow.keras import layers
 from tensorflow.keras import initializers, optimizers
-import matplotlib.pyplot as plt
+from tensorflow.keras.layers import Dense, Dropout, LeakyReLU
+from tensorflow.keras.models import Sequential
+
 
 class NNTR:
 
-    def score_to_numeric(self, x):
-        if x == 'Stub':
-            return 0
-        if x == 'Start':
-            return 1
-        if x == 'C':
-            return 2
-        if x == 'B':
-            return 3
-        if x == 'GA':
-            return 4
-        if x == 'FA':
-            return 5
-
     def __init__(self, args):
-        self.test_data_path = args[0]
-        self.train_data_path = args[1]
+        self.data_path = "readscore/all_score.csv"
 
-        self.train = pd.read_csv(self.train_data_path, low_memory=False)
-        self.test = pd.read_csv(self.test_data_path)
-        self.target_names = self.train['rating'].unique()
+        self.train = pd.read_csv(self.data_path, low_memory=False)
 
         self.features = ['infonoisescore', 'logcontentlength', 'hasinfobox', 'logreferences', 'logpagelinks', 'numimageslength',
                          'num_citetemplates', 'lognoncitetemplates',
@@ -50,33 +31,18 @@ class NNTR:
                          'gunning_fog_index', 'smog_index', 'ari_index', 'lix_index', 'dale_chall_score',
                          'linsear_write_formula', 'grammar']
 
-        # cat = pd.Categorical(self.train['rating'], categories=['B', 'C', 'FA', 'GA', 'Start', 'Stub'], ordered=True)
-        # self.train_y, self.train_mapping = pd.factorize(cat)
-        #
-        # cat = pd.Categorical(self.test['rating'], categories=['B', 'C', 'FA', 'GA', 'Start', 'Stub'], ordered=True)
-        # self.test_y, self.test_mapping = pd.factorize(cat)
-
-        self.train['score'] = self.train['rating'].apply(self.score_to_numeric)
-        self.test['score'] = self.test['rating'].apply(self.score_to_numeric)
         self.classes = ['Stub', 'Start', 'C', 'B', 'GA', 'FA']
-        self.classes_n = [0, 1, 2, 3, 4, 5]
 
         self.by = label_binarize(self.train['rating'], classes=self.classes)
-        self.byy = label_binarize(self.test['rating'], classes=self.classes)
-
-        # print('train: ', len(self.train))
-        # print('test: ', len(self.test))
-
-
-        # self.by = label_binarize(self.train['rating'], classes=self.classes)
-        # self.byy = label_binarize(self.test['rating'], classes=self.classes)
-        # print(np.array(self.train[self.features]).shape)
 
         scaler = MinMaxScaler(feature_range=(-1, 1))
 
         scaler.fit(self.train[self.features])
         self.train_mm = scaler.transform(self.train[self.features])
-        self.test_mm = scaler.transform(self.test[self.features])
+
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+            self.train_mm,
+            self.train['rating'], test_size=0.10, random_state=2)
 
     # define baseline model
     def baseline_model(self):
@@ -84,7 +50,6 @@ class NNTR:
         self.clf = Sequential()
         self.clf.add(Dense(128, input_dim=32, kernel_initializer=initializer))
         self.clf.add(LeakyReLU())
-        self.clf.add(Dropout(0.1))
         self.clf.add(Dense(512, kernel_initializer=initializer))
         self.clf.add(LeakyReLU())
         self.clf.add(Dropout(0.1))
@@ -92,43 +57,21 @@ class NNTR:
         self.clf.add(LeakyReLU())
         self.clf.add(Dropout(0.1))
         self.clf.add(Dense(6, activation='softmax'))  # Final Layer using Softmax
-        optimizer = optimizers.Adamax()
-        self.clf.compile(loss='categorical_crossentropy',
+        optimizer = optimizers.Adamax(0.0008)
+        self.clf.compile(loss='sparse_categorical_crossentropy',
                          optimizer=optimizer, metrics=['accuracy'])
         return self.clf
 
     def learn(self):
 
-        self.estimator = KerasClassifier(build_fn=self.baseline_model, epochs=65, verbose=1)
-        # kfold = KFold(n_splits=5, shuffle=True)
-        # results = cross_val_score(estimator, self.train_mm, self.train_y,
-        #                           cv=kfold, error_score='raise')
-        # print("Baseline: %.2f%% (%.2f%%)" % (results.mean() * 100, results.std() * 100))
+        self.estimator = KerasClassifier(build_fn=self.baseline_model, epochs=60, verbose=1)
 
-        # roc = RocCallback(training_data=(X_train, y_train),
-        #                   validation_data=(X_test, y_test))
-
-        self.estimator.fit(self.train_mm, self.by)
-        self.score = self.estimator.predict(self.test_mm)
-        scores = np.array([self.classes[x] for x in self.score])
-        acc = self.estimator.score(self.test_mm, self.byy)
-        print(pd.crosstab(self.test['rating'], scores, rownames=['Actual Species'], colnames=['predicted']))
+        self.estimator.fit(self.X_train, self.y_train)
+        self.score = self.estimator.predict(self.X_test)
+        acc = self.estimator.score(self.X_test, self.y_test)
+        print(pd.crosstab(self.y_test, self.score, rownames=['Actual Species'], colnames=['predicted']))
         print(acc)
 
-
-    def fetchScore(self):
-        preds = self.target_names[self.clf.predict(self.test[self.features])]
-
-        print(pd.crosstab(self.test['rating'], preds, rownames=['Actual Species'], colnames=['predicted']))
-        print('Classification accuracy without selecting features: {:.3f}'
-              .format(accuracy_score(self.test['rating'], preds)))
-        # print(classification_report(self.test['rating'], preds))
-
-    def evaluate(self, model):
-        predictions = self.target_names[model.predict(self.test[self.features])]
-        print(pd.crosstab(self.test['rating'], predictions, rownames=['Actual Species'], colnames=['predicted']))
-        print('Classification accuracy without selecting features: {:.3f}'
-              .format(accuracy_score(self.test['rating'], predictions)))
 
     def computeROC(self):
         # Binarize the output

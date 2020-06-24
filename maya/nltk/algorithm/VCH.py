@@ -1,7 +1,3 @@
-from pprint import pprint
-import keras
-from pprint import pprint
-
 import keras
 import numpy as np
 import pandas as pd
@@ -11,10 +7,8 @@ from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import RandomizedSearchCV
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.tree import DecisionTreeClassifier
 
 
 class VCH:
@@ -60,9 +54,6 @@ class VCH:
         scaler.fit(self.train[self.features])
         self.train_mm = scaler.transform(self.train[self.features])
         self.test_mm = scaler.transform(self.test[self.features])
-
-
-
 
     # define baseline model
     def baseline_model(self):
@@ -119,11 +110,5 @@ class VCH:
         print('Classification accuracy without selecting features: {:.3f}'
               .format(accuracy_score(self.test['rating'], preds)))
 
-    def evaluate(self, model):
-        predictions = model.predict(self.test[self.features])
-        predictions = np.array([self.classes[x] for x in predictions])
-        print(pd.crosstab(self.test['rating'], predictions, rownames=['Actual Species'], colnames=['predicted']))
-        print('Classification accuracy without selecting features: {:.3f}'
-              .format(accuracy_score(self.test['rating'], predictions)))
 
 

@@ -1,18 +1,12 @@
-from itertools import cycle
 from pprint import pprint
-from scipy.stats import randint
 
-from numpy import interp
-from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
-import numpy as np
-from sklearn.metrics import accuracy_score, roc_auc_score, roc_curve, auc,classification_report
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.model_selection import cross_val_score, RandomizedSearchCV, KFold, GridSearchCV
-from sklearn.preprocessing import label_binarize, MinMaxScaler
-from sklearn.svm import SVC, LinearSVC
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import GridSearchCV
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
+
 
 class SVMT:
 
@@ -42,8 +36,6 @@ class SVMT:
 
         cat = pd.Categorical(self.test['rating'], categories=['B', 'C', 'FA', 'GA', 'Start', 'Stub'],ordered=True)
         self.test_y, self.test_mapping = pd.factorize(cat)
-        # print('train: ', len(self.train))
-        # print('test: ', len(self.test))
 
         scaler = MinMaxScaler(feature_range=(0, 1))
         scaler.fit(self.train[self.features])
@@ -79,19 +71,7 @@ class SVMT:
         # print(scores)
         # print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 
-        # ####finding important feature
-        # feature_imp = pd.Series(self.clf.feature_importances_, index=self.features).sort_values(ascending=False)
-
-        # #feature_imp
-        # sns.barplot(x=feature_imp, y=feature_imp.index)
-        # # Add labels to your graph
-        # plt.xlabel('Feature Importance Score')
-        # plt.ylabel('Features')
-        # plt.title("Visualizing Important Features")
-        # plt.show()
         return self.clf
-
-
 
     def fetchScore(self):
         preds = self.target_names[self.clf.predict(self.test[self.features])]
@@ -99,7 +79,6 @@ class SVMT:
         print(pd.crosstab(self.test['rating'], preds, rownames=['Actual Species'], colnames=['predicted']))
         print('Classification accuracy without selecting features: {:.3f}'
               .format(accuracy_score(self.test['rating'], preds)))
-        #print(classification_report(self.test['rating'], preds))
 
     def evaluate(self, model):
         predictions = self.target_names[model.predict(self.test[self.features])]

@@ -4,7 +4,7 @@ import sys
 import dateparser
 import numpy as np
 
-from examples.TrustScore import TrustScore
+from script.TrustScore import TrustScore
 from maya.nltk import util
 
 sys.path.append("..")

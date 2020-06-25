@@ -1,9 +1,6 @@
-import json
 import sys
 
-import numpy as np
-
-from examples.TrustScore import TrustScore
+from script.TrustScore import TrustScore
 
 sys.path.append("..")
 import pandas as pd

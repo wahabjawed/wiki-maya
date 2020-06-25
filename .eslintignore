@@ -1,4 +1,0 @@
-node_modules/**
-build/**
-maya/wsgi/static/lib/**
-maya/wsgi/static/WikimediaUI/**

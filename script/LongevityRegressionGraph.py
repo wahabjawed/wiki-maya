@@ -6,7 +6,7 @@ from sklearn import metrics
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
-from examples.TrustScore import TrustScore
+from script.TrustScore import TrustScore
 
 sys.path.append("..")
 from mwapi import Session

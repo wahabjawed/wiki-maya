@@ -35,16 +35,16 @@ gain.
 
 [[Back to top]](https://github.com/wahabjawed/wiki-maya#index)
 
-\\write demo file table
-
 File | Description 
 --- | ---
-File 1 | 301
-File 1  | 301
-File 1  | 301
-File 1  | 301
-File 1  | 301
-File 1  | 301
+[testAlorithmReadiability.py](https://github.com/wahabjawed/wiki-maya/blob/master/script/testAlorithmReadiability.py) | This file contains several functions realted to "Feature Selection, Buidling testing multiple machine learning classifer, and Hyper-tune the classifer". It will output graph realted to feature importance, confusion metrics of different classifers before and after hypertuned. All the methods are called in the main section. You can run the execute the file by: "python testAlorithmReadiability.py"
+[UserContributionMetric.py](https://github.com/wahabjawed/wiki-maya/blob/master/script/UserContributionMetric.py)  | The file contains function realted to plotting graph for user contribution and trust values of those contribution that are used in our thesis. It requires that the user computation ot be calculated first using [calcFeatureContrib.py](https://github.com/wahabjawed/wiki-maya/blob/master/script/calcFeatureContrib.py). All the methods are called in the main section. You can execute the file by: "python calcFeatureContrib.py" 
+[UserLongevityMetric.py](https://github.com/wahabjawed/wiki-maya/blob/master/script/UserLongevityMetric.py)  | The file contains function realted to calculating text longevity, plotting graph for text longevity and its trust values that are used in our thesis. All the methods are called in the main section. You can execute the file by: "python UserLongevityMetric.py" 
+[LongevityRegressionGraph.py](https://github.com/wahabjawed/wiki-maya/blob/master/script/LongevityRegressionGraph.py)  | The file contains function realted to calculating multi variable regression of Longevity and Trust Score. All the methods are called in the main section. You can run the execute the file by: "python LongevityRegressionGraph.py" 
+[TrustScore.py](https://github.com/wahabjawed/wiki-maya/blob/master/script/TrustScore.py)  | The file contains function realted to calculating Trust Score. It is python implementation of [Trust Metric](https://hal.inria.fr/hal-01351250/document). You can execute the file by: "python TrustScore.py"
+[calcFeatureContrib.py](https://github.com/wahabjawed/wiki-maya/blob/master/script/calcFeatureContrib.py)  | The file contains function realted to calculating user contribution and quality of contribution. All the methods are called in the main section. You can run the execute the file by: "python calcFeatureContrib.py" 
+[calcFeatureNew.py](https://github.com/wahabjawed/wiki-maya/blob/master/script/calcFeatureNew.py)  | The file contains function realted to calculating readability scores and new text based features. It requires to downlaod 2015 wikipedia quality dataset from [2015 dataset](https://figshare.com/articles/English_Wikipedia_Quality_Asssessment_Dataset/1375406). All the methods are called in the main section. You can execute the file by: "python calcFeatureNew.py" 
+[Machine Learning Classifiers](https://github.com/wahabjawed/wiki-maya/tree/master/maya/nltk/algorithm)  | The directory contains all the machine leanring classifers that we used for our prediction.
 
 ## Issues
 

@@ -195,6 +195,36 @@ class Extractor:
             # It's OK to not find a revision here.
             return None
 
+    def get_all_user(self, auprop={'editcount'}):
+
+        logger.debug("Requesting the all usersfrom the API")
+
+        is_continue = True
+        user_contrib = list()
+        uccontinue = None
+
+        index = 0
+
+        while is_continue:
+
+            doc = self.session.get(action="query", list="allusers", aulimit="max", auwitheditsonly=1,
+                                   auprop=auprop, aufrom=uccontinue)
+
+            user_contrib.extend(list(doc['query']['allusers']))
+
+            if "continue" in doc:
+                uccontinue = doc['continue']['aufrom']
+            else:
+                is_continue = False
+            print("iteraton: ", index)
+            index += 1
+
+        if len(user_contrib) > 0:
+            return user_contrib
+        else:
+            # It's OK to not find a revision here.
+            return None
+
     def get_page_creation_doc(self, page_id,
                               rvprop={'ids', 'user', 'timestamp', 'userid',
                                       'comment', 'flags', 'size'}):

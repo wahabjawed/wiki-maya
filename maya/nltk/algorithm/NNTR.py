@@ -11,7 +11,9 @@ from sklearn.preprocessing import MinMaxScaler, label_binarize
 from tensorflow.keras import initializers, optimizers
 from tensorflow.keras.layers import Dense, Dropout, LeakyReLU
 from tensorflow.keras.models import Sequential
-
+import tensorflow as tf
+from sklearn.metrics import roc_auc_score
+from keras import backend as K
 
 class NNTR:
 
@@ -44,6 +46,14 @@ class NNTR:
             self.train_mm,
             self.train['rating'], test_size=0.10, random_state=2)
 
+    def auroc(self, y_true, y_pred):
+        return tf.py_function(roc_auc_score, (y_true, y_pred), tf.double)
+
+    def auc(self, y_true, y_pred):
+        auc = tf.metrics.AUC(y_true, y_pred)[1]
+        K.get_session().run(tf.local_variables_initializer())
+        return auc
+
     # define baseline model
     def baseline_model(self):
         initializer = initializers.he_uniform()
@@ -64,19 +74,19 @@ class NNTR:
 
     def learn(self):
 
-        self.estimator = KerasClassifier(build_fn=self.baseline_model, epochs=60, verbose=1)
+        self.estimator = KerasClassifier(build_fn=self.baseline_model, epochs=1, verbose=1)
 
         self.estimator.fit(self.X_train, self.y_train)
         self.score = self.estimator.predict(self.X_test)
+        #roc = roc_auc_score(self.y_test, self.score)
         acc = self.estimator.score(self.X_test, self.y_test)
         print(pd.crosstab(self.y_test, self.score, rownames=['Actual Species'], colnames=['predicted']))
         print(acc)
+        #print(roc)
 
 
     def computeROC(self):
         # Binarize the output
-
-
         self.n_classes = self.by.shape[1]
         self.y_score = label_binarize(self.score, classes=self.classes_n)
         kf = KFold(shuffle=True, n_splits=5)

@@ -2,13 +2,14 @@ import keras
 import numpy as np
 import pandas as pd
 from keras import Sequential
-from keras.layers import Dense
+from tensorflow.keras import initializers, optimizers
 from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.layers import Dense, Dropout, LeakyReLU
 
 
 class VCH:
@@ -57,13 +58,20 @@ class VCH:
 
     # define baseline model
     def baseline_model(self):
+        initializer = initializers.he_uniform()
         self.clf = Sequential()
-        self.clf.add(Dense(128, input_dim=32, activation='relu'))
-        self.clf.add(Dense(1024, activation='relu'))
-        # self.clf.add(Dropout(0.1))
+        self.clf.add(Dense(128, input_dim=32, kernel_initializer=initializer))
+        self.clf.add(LeakyReLU())
+        self.clf.add(Dense(512, kernel_initializer=initializer))
+        self.clf.add(LeakyReLU())
+        self.clf.add(Dropout(0.1))
+        self.clf.add(Dense(256, kernel_initializer=initializer))
+        self.clf.add(LeakyReLU())
+        self.clf.add(Dropout(0.1))
         self.clf.add(Dense(6, activation='softmax'))  # Final Layer using Softmax
-        optimizer = keras.optimizers.Adamax(lr=0.0015)
-        self.clf.compile(loss='sparse_categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+        optimizer = optimizers.Adamax(0.0008)
+        self.clf.compile(loss='sparse_categorical_crossentropy',
+                         optimizer=optimizer, metrics=['accuracy'])
         return self.clf
 
     def learn(self):

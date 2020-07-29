@@ -411,6 +411,8 @@ def findDiffRevised(parent_rev, current_rev):
             word = word + (s[1])
             pre_char_i = s[2]
 
+    output_list2_r.append([w_index, word])
+
     return output_list2_r
 
 

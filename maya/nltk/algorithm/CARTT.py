@@ -6,9 +6,7 @@ from numpy import interp
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import numpy as np
-from sklearn.metrics import accuracy_score, roc_auc_score, roc_curve, auc, classification_report
-import matplotlib.pyplot as plt
-import seaborn as sns
+from sklearn.metrics import accuracy_score
 from sklearn.model_selection import cross_val_score, RandomizedSearchCV, KFold, GridSearchCV
 from sklearn.preprocessing import label_binarize, MinMaxScaler
 from sklearn.tree import DecisionTreeClassifier

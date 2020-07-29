@@ -1,20 +1,10 @@
-from itertools import cycle
 from pprint import pprint
-from scipy.stats import randint
 
-from numpy import interp
-from sklearn.ensemble import RandomForestClassifier
-import pandas as pd
 import numpy as np
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, roc_auc_score, roc_curve, auc, classification_report
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.model_selection import cross_val_score, RandomizedSearchCV, KFold, GridSearchCV
+import pandas as pd
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import RandomizedSearchCV
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.preprocessing import label_binarize
-from sklearn.svm import SVC
-from sklearn.tree import DecisionTreeClassifier
 
 
 class MMNB:

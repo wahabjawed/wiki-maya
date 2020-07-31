@@ -17,6 +17,16 @@ session = Session("https://en.wikipedia.org/w/api.php", user_agent="test")
 api_extractor = api.Extractor(session)
 
 
+###### get all users ########
+def getAllUsers():
+    uc = api_extractor.get_all_user();
+    print(uc)
+    data = json.dumps(uc)
+    df = pd.read_json(data)
+    print(df.head())
+    df.to_csv("readscore/all_user_data.csv")
+
+
 ###### structure user revision ########
 def getUserContrib(userid):
     uc = api_extractor.get_all_contrib_user(userid, {'ids', 'timestamp', 'size'});
@@ -131,13 +141,15 @@ def calcDiff(userid):
             parent_rev = util.read_file('rev_user/' + str(temp['parentid']))
             original_text = util.findDiffRevised(parent_rev, current_rev)
             original_text = [w for w in original_text if len(w[1]) > 2]
+            original_text = list(v[1] for v in original_text)
 
             total = 0
             for txt in original_text:
-                total += len(txt[1])
+                total += len(txt)
 
             temp['contribLength'] = total
             temp['originaltext'] = original_text
+
 
             rev = [i for i in temp['next_rev']]
             if total > 7 and len(rev) > 5:
@@ -147,8 +159,8 @@ def calcDiff(userid):
                 for id in rev:
                     try:
                         rev_txt = util.read_file('rev_user/' + str(id['revid']))
-                        ratio = util.textPreservedRatio(original_text, rev_txt, total)
-                        if ratio < 0.6 and captureLongevity:
+                        ratio = util.textPreservedRatio(original_text, rev_txt)
+                        if ratio < 0.9 and captureLongevity:
                             end_time = dateparser.parse(id['timestamp'])
                             temp['longevityTime'] = round((end_time - start_time).total_seconds() / 3600, 2)
                             temp['longevityRev'] = index
@@ -163,9 +175,9 @@ def calcDiff(userid):
                     temp['longevityRev'] = index
 
                 # last rev contrib
-                rev_txt = util.read_file('rev_user/' + str(temp['last_rev_id']))
-                ratio = util.textPreservedRatio(original_text, rev_txt, total)
-                temp['matchRatioLast'] = ratio
+                # rev_txt = util.read_file('rev_user/' + str(temp['last_rev_id']))
+                # ratio = util.textPreservedRatio(original_text, rev_txt, total)
+                # temp['matchRatioLast'] = ratio
 
     with open('user_data/rev_list_' + userid + '-dp.json', 'w') as outfile:
         json.dump(updated_data, outfile)
@@ -214,8 +226,7 @@ def plotGraphTrustScore(userid):
 
     print(series)
 
-    trust_values = TrustScore([series[graph_for],24]).calculate()
-
+    trust_values = TrustScore([series[graph_for], 24]).calculate()
 
     plot = pyplot.plot(series['timestamp'], trust_values, 'b-o')
 
@@ -234,6 +245,24 @@ def getPlainText(pageID):
         outfile.write(txt['query']['pages'][pageID]['extract'])
 
 
+def testExtractOriginalContribution():
+    source = "abc ghi mno"
+    destination = "abc def ghi jkl mno"
+
+    ratio = util.findDiffRevised(source, destination)
+    print(ratio)
+
+
+def testDiffOfContributions():
+    parent_rev = [
+        "I think the article could  widfdfdth a review.\nFrom memory dfdfdidn't one of our pilots get some dirty US looks for canceling a mission when he decided he couldn't reliably isolate the intended target, as per his Aust. orders accuracy in avoiding civilians had top priority.",
+        "I guess you are a igkht."]
+    current_rev = util.read_file('rev_user/22272908')
+
+    ratio = util.textPreservedRatio(parent_rev, current_rev)
+    print(ratio)
+
+
 if __name__ == "__main__":
     userid = '36440187'  # spammer
     # "userid": 39180130,  commit vandal once
@@ -247,5 +276,12 @@ if __name__ == "__main__":
     # organizeData(userid)
     # calcDiff(userid)
 
-    plotGraphForLongevity(userid)
-    plotGraphTrustScore(userid)
+    # plotGraphForLongevity(userid)
+    # plotGraphTrustScore(userid)
+
+    # getAllUsers()
+
+    #test cases
+    testExtractOriginalContribution()
+    testDiffOfContributions()
+

@@ -1,4 +1,5 @@
 import difflib
+from difflib import SequenceMatcher
 import math
 import re
 import string
@@ -136,36 +137,24 @@ def read_file(path):
 
 
 def findDiffRevised(parent_rev, current_rev):
-    #ftching diff sequence
-    diff_sequence = difflib.ndiff(parent_rev, current_rev)
-    add_diff_sequence = []
+    """
+       Compute differences between two revisions (string).
+       The computed operations are filtered to keep only insertions.
 
-    #filtering out sequence with +
-    for i, s in enumerate(diff_sequence):
-        if s[0] == '+':
-            add_diff_sequence.append([s[0], s[-1], i])
-
-    # mering char sequence into words and sentences
-    output_list2_r = []
-    pre_char_i = -1
-    word = ""
-    w_index = -1
-    for s in (add_diff_sequence):
-        if (pre_char_i == -1):
-            word = (s[1])
-            w_index = s[2]
-            pre_char_i = s[2]
-        elif pre_char_i + 1 != s[2]:
-            output_list2_r.append([w_index, word])
-            w_index = s[2]
-            word = (s[1])
-            pre_char_i = s[2]
-        else:
-            word = word + (s[1])
-            pre_char_i = s[2]
-
-    output_list2_r.append([w_index, word])
-    return output_list2_r
+       Args:
+           parent_rev (str): text content of a revision.
+           current_rev (str): text content of a newer revision.
+       
+       Result:
+           sequence of insertions. 
+           Each insertion is a sequence defined as follow: [index of insertion in parent_rev, text to be inserted]
+    """
+    diff_ops = SequenceMatcher(None, parent_rev, current_rev)
+    insert_ops = []
+    for (tag, i1, i2, j1, j2) in diff_ops.get_opcodes():
+        if tag == 'insert':
+            insert_ops.append([i1, current_rev[j1:j2]])
+    return insert_ops
 
 
 def textPreservedRatio(o_text, d_text):

@@ -174,11 +174,20 @@ def getInsertedContentSinceParentRevision(parent_rev, new_rev):
     return content
 
 def textPreservedRatio(o_text, d_text):
-    ratio = 0
-    seq = []
-    for text in o_text:
-        seq = difflib.SequenceMatcher(None, text, d_text, autojunk=False).get_matching_blocks()
-        total_matched = sum(int(v[2]) for v in seq)
-        ratio += total_matched/len(text)
+    """
+   Compute the ratio of preserved text between two revisions
 
-    return ratio/len(o_text)
+   Args:
+       o_text (list): a list of elements of the form [index of insertion position, text to be inserted]
+       d_text (str): text content of the destination revision.
+
+   Result:
+       ratio of preserved text (real).
+    """
+    total = 0
+    total_matched = 0
+    for text in o_text:
+        matches = difflib.SequenceMatcher(None, text, d_text, autojunk=False).get_matching_blocks()
+        total_matched += sum(int(match[2]) for match in matches)
+        total += len(text)
+    return total_matched / total

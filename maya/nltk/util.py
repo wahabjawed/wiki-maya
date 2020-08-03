@@ -157,6 +157,22 @@ def findDiffRevised(parent_rev, current_rev):
     return insert_ops
 
 
+def getInsertedContentSinceParentRevision(parent_rev, new_rev):
+    """
+   Compute text content that was inserted in a revision since another revision (string).
+   The computed differences are computed, only insertions are kept. Then their text content is merged into a string.
+
+   Args:
+       parent_rev (str): text content of a revision.
+       new_rev (str): text content of a newer revision.
+
+   Result:
+       the inserted text content (str)
+    """
+    ops = util.findDiffRevised(parent_rev, new_rev)
+    content = "".join([ o[1] for o in ops ])
+    return content
+
 def textPreservedRatio(o_text, d_text):
     ratio = 0
     seq = []

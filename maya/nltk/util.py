@@ -152,7 +152,7 @@ def findDiffRevised(parent_rev, current_rev):
     diff_ops = SequenceMatcher(None, parent_rev, current_rev)
     insert_ops = []
     for (tag, i1, i2, j1, j2) in diff_ops.get_opcodes():
-        if tag == 'insert':
+        if tag == 'insert' or tag == 'replace':
             insert_ops.append([i1, current_rev[j1:j2]])
     return insert_ops
 

@@ -140,8 +140,11 @@ def calcDiff(userid):
         else:
             parent_rev = util.read_file('rev_user/' + str(temp['parentid']))
             original_text = util.findDiffRevised(parent_rev, current_rev)
-            original_text = [w for w in original_text if len(w[1]) > 2]
             original_text = list(v[1] for v in original_text)
+            original_text = [w for w in original_text if len(w) > 0]
+            small_text = [w for w in original_text if len(w) < 5]
+
+
 
             total = 0
             for txt in original_text:
@@ -149,10 +152,10 @@ def calcDiff(userid):
 
             temp['contribLength'] = total
             temp['originaltext'] = original_text
-
+            temp['small_text'] = small_text
 
             rev = [i for i in temp['next_rev']]
-            if total > 7 and len(rev) > 5:
+            if total > 0 and len(rev) > 5:
                 start_time = dateparser.parse(temp['timestamp'])
                 print([temp['pageid'], temp['parentid'], temp['revid'], total])
                 index = 0
@@ -160,7 +163,7 @@ def calcDiff(userid):
                     try:
                         rev_txt = util.read_file('rev_user/' + str(id['revid']))
                         ratio = util.textPreservedRatio(original_text, rev_txt)
-                        if ratio < 0.9 and captureLongevity:
+                        if ratio < 0.95 and captureLongevity:
                             end_time = dateparser.parse(id['timestamp'])
                             temp['longevityTime'] = round((end_time - start_time).total_seconds() / 3600, 2)
                             temp['longevityRev'] = index
@@ -256,7 +259,7 @@ def testExtractOriginalContribution():
 def testDiffOfContributions():
     parent_rev = [
         "I think the article could  widfdfdth a review.\nFrom memory dfdfdidn't one of our pilots get some dirty US looks for canceling a mission when he decided he couldn't reliably isolate the intended target, as per his Aust. orders accuracy in avoiding civilians had top priority.",
-        "I guess you are a igkht."]
+        "I guess you are right. of"]
     current_rev = util.read_file('rev_user/22272908')
 
     ratio = util.textPreservedRatio(parent_rev, current_rev)
@@ -274,7 +277,7 @@ if __name__ == "__main__":
     # getUserContrib(userid)
     # getUserContribLast(userid)
     # organizeData(userid)
-    # calcDiff(userid)
+    #calcDiff(userid)
 
     # plotGraphForLongevity(userid)
     # plotGraphTrustScore(userid)
@@ -282,6 +285,6 @@ if __name__ == "__main__":
     # getAllUsers()
 
     #test cases
-    testExtractOriginalContribution()
+    #testExtractOriginalContribution()
     testDiffOfContributions()
 

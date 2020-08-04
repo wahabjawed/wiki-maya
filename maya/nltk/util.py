@@ -91,21 +91,6 @@ def named_entity_recognition(text):
     return ner
 
 
-def check_grammar_error_rate_o(tool,text):
-    matches = tool.check(text)
-    try:
-        return (len(matches) / len(word_tokenize(text)))*100
-    except:
-        return 0
-
-def check_grammar_error_rate_s(tool,text):
-    matches = tool.check(text)
-    try:
-        return (len(matches) / len(sent_tokenize(text)))
-    except:
-        return 0
-
-
 def check_grammar_error_rate(tool, text, count):
     matches = tool.check(text)
     try:
@@ -124,7 +109,6 @@ def cleanhtml(raw_html):
     cleanr = re.compile('http\S+')
     cleantext = re.sub(cleanr, '', cleantext)
     return cleantext
-
 
 
 def read_file(path):
@@ -169,9 +153,10 @@ def getInsertedContentSinceParentRevision(parent_rev, new_rev):
    Result:
        the inserted text content (str)
     """
-    ops = util.findDiffRevised(parent_rev, new_rev)
-    content = "".join([ o[1] for o in ops ])
+    ops = findDiffRevised(parent_rev, new_rev)
+    content = "".join([o[1] for o in ops])
     return content
+
 
 def textPreservedRatio(o_text, d_text):
     """

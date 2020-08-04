@@ -157,12 +157,37 @@ def findDiffRevised(parent_rev, current_rev):
     return insert_ops
 
 
-def textPreservedRatio(o_text, d_text):
-    ratio = 0
-    seq = []
-    for text in o_text:
-        seq = difflib.SequenceMatcher(None, text, d_text, autojunk=False).get_matching_blocks()
-        total_matched = sum(int(v[2]) for v in seq)
-        ratio += total_matched/len(text)
+def getInsertedContentSinceParentRevision(parent_rev, new_rev):
+    """
+   Compute text content that was inserted in a revision since another revision (string).
+   The computed differences are computed, only insertions are kept. Then their text content is merged into a string.
 
-    return ratio/len(o_text)
+   Args:
+       parent_rev (str): text content of a revision.
+       new_rev (str): text content of a newer revision.
+
+   Result:
+       the inserted text content (str)
+    """
+    ops = util.findDiffRevised(parent_rev, new_rev)
+    content = "".join([ o[1] for o in ops ])
+    return content
+
+def textPreservedRatio(o_text, d_text):
+    """
+   Compute the ratio of preserved text between two revisions
+
+   Args:
+       o_text (list): a list of elements of the form [index of insertion position, text to be inserted]
+       d_text (str): text content of the destination revision.
+
+   Result:
+       ratio of preserved text (real).
+    """
+    total = 0
+    total_matched = 0
+    for text in o_text:
+        matches = difflib.SequenceMatcher(None, text, d_text, autojunk=False).get_matching_blocks()
+        total_matched += sum(int(match[2]) for match in matches)
+        total += len(text)
+    return total_matched / total

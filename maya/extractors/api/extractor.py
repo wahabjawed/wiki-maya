@@ -131,7 +131,7 @@ class Extractor:
 
     def get_all_revision_of_page_prop(self, page_id, rvprop={'ids', 'timestamp', 'size', 'userid', 'content'},
                                       rv_dir="newer",
-                                      rv_limit=50, rv_start=None, rvstartid=None, should_continue=True):
+                                      rv_limit=50, rv_start=None, rvstartid=None, should_continue=True, continue_until=2):
         if page_id is None:
             return None
 
@@ -141,19 +141,21 @@ class Extractor:
         is_continue = True
         rev_docs = list()
         rvcontinue = None
-
+        count =1
         while is_continue:
             doc = self.session.get(action="query", prop="revisions",
                                    pageids=page_id, rvlimit=rv_limit, rvdir=rv_dir,
                                    rvprop=rvprop, rvcontinue=rvcontinue, rvstartid=rvstartid, rvslots="*")
 
             page_doc = doc['query'].get('pages', {'revisions': []}).values()
-            rev_docs.append(list(page_doc)[0]['revisions'])
+            rev_docs.extend(list(page_doc)[0]['revisions'])
 
-            if should_continue and "continue" in doc:
+            if should_continue and continue_until > count and "continue" in doc:
                 rvcontinue = doc['continue']['rvcontinue']
             else:
                 is_continue = False
+
+            count = count +1
 
         if len(rev_docs) > 0:
             return rev_docs

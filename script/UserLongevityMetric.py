@@ -52,20 +52,19 @@ def getUserContrib(user_id):
             if item_contrib['parentid'] == 0:
                 values = api_extractor.get_all_revision_of_page_prop(item_contrib['pageid'],
                                                                      rvprop={'ids', 'timestamp', 'userid', 'content'},
-                                                                     rv_limit=25, rvstartid=item_contrib['revid'],
-                                                                     should_continue=False)
+                                                                     rv_limit=50, rvstartid=item_contrib['revid'],
+                                                                     should_continue=True, continue_until= 2)
             else:
                 values = api_extractor.get_all_revision_of_page_prop(item_contrib['pageid'],
                                                                      rvprop={'ids', 'timestamp', 'userid', 'content'},
-                                                                     rv_limit=25, rvstartid=item_contrib['parentid'],
-                                                                     should_continue=False)
-            values = values[0]
+                                                                     rv_limit=50, rvstartid=item_contrib['parentid'],
+                                                                     should_continue=True, continue_until= 2)
             for id in values:
                 try:
                     with open('rev_user/' + str(id['revid']), 'w') as outfile:
                         outfile.write(id['slots']['main']["*"])
                 except:
-                    print("erreo: ", values)
+                    print("error: ", values)
 
             values.pop(0)
             if item_contrib['parentid'] > 0:
@@ -293,14 +292,14 @@ def testDiffOfContributions():
 
 
 if __name__ == "__main__":
-    userid = '36440187'  # spammer
+    userid = '15'  # spammer
     # "userid": 39180130,  commit vandal once
     # "userid": 415269,  good user
 
     # code to fetch revision of a users, organize them and calculate longevity.
     # Uncomment if you wnat to do it for a new user
 
-    # getUserContrib(userid)
+    getUserContrib(userid)
     # getUserContribLast(userid)
     # organizeData(userid)
     # calcDiff(userid)

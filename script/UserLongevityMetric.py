@@ -284,10 +284,20 @@ def testExtractOriginalContribution():
 def testDiffOfContributions():
     parent_rev = [
         "I think the article could  widfdfdth a review.\nFrom memory dfdfdidn't one of our pilots get some dirty US looks for canceling a mission when he decided he couldn't reliably isolate the intended target, as per his Aust. orders accuracy in avoiding civilians had top priority.",
-        "I guess you are right. of"]
+        "Thanks Cunch. I a guess you are right."]
     current_rev = util.read_file('rev_user/22272908')
 
-    ratio = util.textPreservedRatio(parent_rev, current_rev)
+    ratio = util.textPreservedRatio([parent_rev[1]], current_rev)
+    print(ratio)
+
+
+def testDiffOfContributionStrict():
+    parent_rev = [
+        "I think the article could  widfdfdth a review.\nFrom memory dfdfdidn't one of our pilots get some dirty US looks for canceling a mission when he decided he couldn't reliably isolate the intended target, as per his Aust. orders accuracy in avoiding civilians had top priority.",
+        "Thanks Cunch. I a guess you are right"]
+    current_rev = util.read_file('rev_user/22272908')
+
+    ratio = util.textPreservedRatioBigram([parent_rev[1]], current_rev)
     print(ratio)
 
 
@@ -299,16 +309,16 @@ if __name__ == "__main__":
     # code to fetch revision of a users, organize them and calculate longevity.
     # Uncomment if you wnat to do it for a new user
 
-    getUserContrib(userid)
+    #getUserContrib(userid)
     # getUserContribLast(userid)
     # organizeData(userid)
     # calcDiff(userid)
 
-    plotGraphForLongevity(userid)
+    #plotGraphForLongevity(userid)
     # plotGraphTrustScore(userid)
 
     # getAllUsers()
 
     # test cases
-    # testExtractOriginalContribution()
-    # testDiffOfContributions()
+    #testExtractOriginalContribution()
+    testDiffOfContributionStrict()

@@ -172,7 +172,77 @@ def textPreservedRatio(o_text, d_text):
     total = 0
     total_matched = 0
     for text in o_text:
-        matches = difflib.SequenceMatcher(None, text, d_text, autojunk=False).get_matching_blocks()
-        total_matched += sum(int(match[2]) for match in matches)
-        total += len(text)
+        for words in text.split(' '):
+            matches = difflib.SequenceMatcher(None, words, d_text, autojunk=False).find_longest_match()
+            matches = sorted(matches, key=lambda e: e[2], reverse=True)
+            if (int(matches[0][2]) / len(words) > 0.8):
+                total_matched += int(matches[0][2])
+            total += len(words)
+    return total_matched / total
+
+
+def textPreservedRatioStrict(o_text, d_text):
+    """
+   Compute the ratio of preserved text between two revisions using Contains method
+
+   Args:
+       o_text (list): a list of elements of the form [index of insertion position, text to be inserted]
+       d_text (str): text content of the destination revision.
+
+   Result:
+       ratio of preserved text (real).
+    """
+    total = 0
+    total_matched = 0
+    for text in o_text:
+        if text in d_text:
+            total_matched += len(text)
+            total += len(text)
+        else:
+            for word in text.split(' '):
+                if word in d_text:
+                    total_matched += len(word)
+                total += len(word)
+    return total_matched / total
+
+
+def textPreservedRatioBigram(o_text, d_text):
+    """
+   Compute the ratio of preserved text between two revisions using BiGram Technique
+
+   Args:
+       o_text (list): a list of elements of the form [index of insertion position, text to be inserted]
+       d_text (str): text content of the destination revision.
+
+   Result:
+       ratio of preserved text (real).
+    """
+    total = 0
+    total_matched = 0
+    for text in o_text:
+        if text in d_text:
+            total_matched += len(text)
+            total += len(text)
+        else:
+            list_words = text.split(' ')
+            index = 0
+            while index < len(list_words):
+
+                if index+1 == len(list_words):
+                    bigram = list_words[index-1] + ' ' + list_words[index]
+                elif index == 0:
+                    bigram = list_words[index] + ' ' + list_words[index + 1]
+                else:
+                    bigramL = list_words[index-1] + ' ' + list_words[index]
+                    bigramR = list_words[index] + ' ' + list_words[index + 1]
+
+                if index + 1 == len(list_words) or index == 0:
+                    if bigram in d_text:
+                        total_matched += len(list_words[index])
+                else:
+                    if bigramL in d_text or bigramR in d_text:
+                        total_matched += len(list_words[index])
+
+                total += len(list_words[index])
+                index += 1
     return total_matched / total

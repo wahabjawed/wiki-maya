@@ -9,6 +9,7 @@ from nltk import word_tokenize, pos_tag, ne_chunk
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.stem import WordNetLemmatizer
+from nltk.tokenize.treebank import TreebankWordDetokenizer
 from textblob import TextBlob
 
 
@@ -28,6 +29,10 @@ def word_tokenize(text):
     return word_tokens
 
 
+def detokenize(text):
+    return TreebankWordDetokenizer().detokenize(text);
+
+
 def sent_tokenize(text):
     sent_token = nltk.sent_tokenize(text)
     print(sent_token)
@@ -35,13 +40,10 @@ def sent_tokenize(text):
 
 
 def stop_word_removal(text, lang="en"):
-    # from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
-    # from spacy.lang.en.stop_words import STOP_WORDS
     stopword = stopwords.words('english')
     word_tokens = nltk.word_tokenize(text)
     removing_stopwords = [word for word in word_tokens if word not in stopword]
-    print(removing_stopwords)
-    return removing_stopwords
+    return detokenize(removing_stopwords)
 
 
 def extract_lemma(text, lang="en"):

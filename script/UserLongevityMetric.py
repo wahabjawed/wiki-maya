@@ -173,6 +173,7 @@ def calcDiff(user_id):
             original_text = util.findDiffRevised(parent_rev, current_rev)
             original_text = list(v[1] for v in original_text)
             original_text = [w for w in original_text if len(w) > 0]
+            original_text = [util.stop_word_removal(w) for w in original_text]
             small_text = [w for w in original_text if len(w) < 5]
 
             total = 0
@@ -192,6 +193,7 @@ def calcDiff(user_id):
                     try:
                         next_rev = util.read_file('rev_user/' + str(rev['revid']))
                         d_text = util.getInsertedContentSinceParentRevision(parent_rev, next_rev)
+                        d_text = util.stop_word_removal(d_text)
                         ratio = util.textPreservedRatio(original_text, d_text)
                         if ratio < 0.95 and capture_longevity:
                             end_time = dateparser.parse(rev['timestamp'])

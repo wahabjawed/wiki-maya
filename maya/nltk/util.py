@@ -222,9 +222,11 @@ def textPreservedRatioContains(o_text, d_text):
     total = 0
     total_matched = 0
     for text in o_text:
-        if text in d_text:
-            total_matched += len(text)
-        total += len(text)
+        sent_tokens = sent_tokenize(text)
+        for token in sent_tokens:
+            if token in d_text:
+                total_matched += len(token)
+            total += len(token)
     return total_matched / total
 
 

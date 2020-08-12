@@ -5,6 +5,7 @@ import re
 import string
 
 import nltk
+from enchant.utils import xrange
 from nltk import word_tokenize, pos_tag, ne_chunk
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
@@ -35,7 +36,6 @@ def detokenize(text):
 
 def sent_tokenize(text):
     sent_token = nltk.sent_tokenize(text)
-    print(sent_token)
     return sent_token
 
 
@@ -196,16 +196,20 @@ def textPreservedRatioStrict(o_text, d_text):
     """
     total = 0
     total_matched = 0
+    dest_tokens = sent_tokenize(d_text)
+    dest_tokens_words = word_tokenize(d_text)
+
     for text in o_text:
-        if text in d_text:
-            total_matched += len(text)
-            total += len(text)
-        else:
-            for word in text.split(' '):
-                if word in d_text:
-                    total_matched += len(word)
-                total += len(word)
-    return total_matched / total
+        for sent_token in sent_tokenize(text):
+            if sent_token in dest_tokens:
+                total_matched += len(sent_token)
+                total += len(sent_token)
+            else:
+                for word in word_tokenize(sent_token):
+                    if word in dest_tokens_words:
+                        total_matched += len(word)
+                    total += len(word)
+    return round(total_matched / total, 2)
 
 
 def textPreservedRatioContains(o_text, d_text):
@@ -221,13 +225,14 @@ def textPreservedRatioContains(o_text, d_text):
     """
     total = 0
     total_matched = 0
+    dest_tokens = sent_tokenize(d_text)
+
     for text in o_text:
-        sent_tokens = sent_tokenize(text)
-        for token in sent_tokens:
-            if token in d_text:
-                total_matched += len(token)
-            total += len(token)
-    return total_matched / total
+        for sent_token in sent_tokenize(text):
+            if sent_token in dest_tokens:
+                total_matched += len(sent_token)
+            total += len(sent_token)
+    return round(total_matched / total, 2)
 
 
 def textPreservedRatioBigram(o_text, d_text):
@@ -243,33 +248,53 @@ def textPreservedRatioBigram(o_text, d_text):
     """
     total = 0
     total_matched = 0
+    dest_tokens = sent_tokenize(d_text)
+    dest_tokens_words = word_tokenize(d_text)
+
     for text in o_text:
-        if text in d_text:
-            total_matched += len(text)
-            total += len(text)
-        else:
-            list_words = text.split(' ')
-            if len(list_words) > 1:
-                index = 0
-                while index < len(list_words):
-
-                    if index+1 == len(list_words):
-                        bigram = list_words[index-1] + ' ' + list_words[index]
-                    elif index == 0:
-                        bigram = list_words[index] + ' ' + list_words[index + 1]
-                    else:
-                        bigramL = list_words[index-1] + ' ' + list_words[index]
-                        bigramR = list_words[index] + ' ' + list_words[index + 1]
-
-                    if index + 1 == len(list_words) or index == 0:
-                        if bigram in d_text:
-                            total_matched += len(list_words[index])
-                    else:
-                        if bigramL in d_text or bigramR in d_text:
-                            total_matched += len(list_words[index])
-
-                    total += len(list_words[index])
-                    index += 1
+        for sent_token in sent_tokenize(text):
+            if sent_token in dest_tokens:
+                total_matched += len(sent_token)
+                total += len(sent_token)
             else:
-                total += len(text)
-    return total_matched / total
+                list_words = word_tokenize(sent_token)
+                sizeList = len(list_words)
+                if sizeList > 1:
+                    index = 0
+                    while index < sizeList:
+
+                        wordToMatch = list_words[index]
+
+                        if index + 1 == sizeList:
+                            bigram = list_words[index - 1:index + 1]
+                        elif index == 0:
+                            bigram = list_words[index:index + 2]
+                        else:
+                            bigramL = list_words[index - 1:index + 1]
+                            bigramR = list_words[index:index + 2]
+
+                        if index + 1 == sizeList or index == 0:
+                            if isSubListInList(bigram, dest_tokens_words):
+                                total_matched += len(wordToMatch)
+                        else:
+                            if isSubListInList(bigramL, dest_tokens_words) or isSubListInList(bigramR,
+                                                                                              dest_tokens_words):
+                                total_matched += len(wordToMatch)
+
+                        total += len(wordToMatch)
+                        index += 1
+                else:
+                    total += len(sent_token)
+    return round(total_matched / total, 2)
+
+
+def isSubListInList(sublist, list):
+    occ = [i for i, a in enumerate(list) if a == sublist[0]]
+
+    for b in occ:
+        if list[b:b + len(sublist)] == sublist:
+            return True
+            break
+        if len(occ) - 1 == occ.index(b):
+            return False
+            break

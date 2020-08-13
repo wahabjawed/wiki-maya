@@ -113,5 +113,29 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(ratio, 0.9)
 
 
+        o_text = ['One needs', 'two three']
+
+        ratio = util.textPreservedRatioBigram(o_text, d_text)
+
+        self.assertEqual(ratio, 0.5)
+
+    def test_ExtractOriginalContribution(self):
+        source = "abc ghi mno"
+        destination = "abc def ghi jkl mno"
+
+        ratio = util.findDiffRevised(source, destination)
+        self.assertEqual(2,len(ratio))
+
+    def test_DiffOfContributions(self):
+        parent_rev = [
+            "I think the article could  widfdfdth a review.\nFrom memory dfdfdidn't one of our pilots get some dirty US looks for canceling a mission when he decided he couldn't reliably isolate the intended target, as per his Aust. orders accuracy in avoiding civilians had top priority.",
+            "Thanks Cunch. I a guess you are right."]
+        current_rev = util.read_file('../script/rev_user/22272908')
+
+        ratio = util.textPreservedRatio([parent_rev[1]], current_rev)
+
+        self.assertEqual(0.77, ratio)
+
+
 if __name__ == '__main__':
     unittest.main()

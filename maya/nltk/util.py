@@ -175,12 +175,12 @@ def textPreservedRatio(o_text, d_text):
     total_matched = 0
     for text in o_text:
         for words in text.split(' '):
-            matches = difflib.SequenceMatcher(None, words, d_text, autojunk=False).find_longest_match()
+            matches = difflib.SequenceMatcher(None, words, d_text, autojunk=False).get_matching_blocks()
             matches = sorted(matches, key=lambda e: e[2], reverse=True)
             if (int(matches[0][2]) / len(words) > 0.8):
                 total_matched += int(matches[0][2])
             total += len(words)
-    return total_matched / total
+    return round(total_matched / total, 2)
 
 
 def textPreservedRatioStrict(o_text, d_text):
@@ -258,33 +258,36 @@ def textPreservedRatioBigram(o_text, d_text):
                 total += len(sent_token)
             else:
                 list_words = word_tokenize(sent_token)
-                sizeList = len(list_words)
+                bigrams = list(nltk.bigrams(list_words))
+                sizeList = len(bigrams)
                 if sizeList > 1:
                     index = 0
+
                     while index < sizeList:
+                        wordToMatch = list(bigrams[index])
 
-                        wordToMatch = list_words[index]
-
-                        if index + 1 == sizeList:
-                            bigram = list_words[index - 1:index + 1]
-                        elif index == 0:
-                            bigram = list_words[index:index + 2]
+                        if index == 0:
+                            if isSubListInList(wordToMatch, dest_tokens_words):
+                                total_matched += len(wordToMatch[0])
                         else:
-                            bigramL = list_words[index - 1:index + 1]
-                            bigramR = list_words[index:index + 2]
+                            wordToMatchL = list(bigrams[index - 1])
+                            leftMatch = isSubListInList(wordToMatchL, dest_tokens_words)
+                            rightMatch = isSubListInList(wordToMatch, dest_tokens_words)
+                            if leftMatch or rightMatch:
+                                total_matched += len(wordToMatch[0])
 
-                        if index + 1 == sizeList or index == 0:
-                            if isSubListInList(bigram, dest_tokens_words):
-                                total_matched += len(wordToMatch)
-                        else:
-                            if isSubListInList(bigramL, dest_tokens_words) or isSubListInList(bigramR,
-                                                                                              dest_tokens_words):
-                                total_matched += len(wordToMatch)
+                            # adding the last element
+                            if index + 1 == sizeList and rightMatch:
+                                total_matched += len(wordToMatch[1])
 
-                        total += len(wordToMatch)
                         index += 1
+
                 else:
-                    total += len(sent_token)
+                    if isSubListInList(list_words, dest_tokens_words):
+                        total_matched += sum(map(len, list_words))
+
+                total += sum(map(len, list_words))
+
     return round(total_matched / total, 2)
 
 

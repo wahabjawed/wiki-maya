@@ -4,17 +4,23 @@ import sys
 import dateparser
 import numpy as np
 
-from script.TrustScore import TrustScore
 from maya.nltk import util
+from pandarallel import pandarallel
+
+from script.TrustScore import TrustScore
 
 sys.path.append("..")
 from mwapi import Session
-from maya.extractors import api
+from maya.extractors.api import Extractor
 import pandas as pd
 from matplotlib import pyplot
 
+import os.path
+
 session = Session("https://en.wikipedia.org/w/api.php", user_agent="test")
-api_extractor = api.Extractor(session)
+api_extractor = Extractor(session)
+
+pandarallel.initialize(nb_workers=5)
 
 
 def getAllUsers():
@@ -53,12 +59,12 @@ def getUserContrib(user_id):
                 values = api_extractor.get_all_revision_of_page_prop(item_contrib['pageid'],
                                                                      rvprop={'ids', 'timestamp', 'userid', 'content'},
                                                                      rv_limit=50, rvstartid=item_contrib['revid'],
-                                                                     should_continue=True, continue_until= 2)
+                                                                     should_continue=True, continue_until=2)
             else:
                 values = api_extractor.get_all_revision_of_page_prop(item_contrib['pageid'],
                                                                      rvprop={'ids', 'timestamp', 'userid', 'content'},
                                                                      rv_limit=50, rvstartid=item_contrib['parentid'],
-                                                                     should_continue=True, continue_until= 2)
+                                                                     should_continue=True, continue_until=2)
             for id in values:
                 try:
                     with open('rev_user/' + str(id['revid']), 'w') as outfile:
@@ -159,58 +165,66 @@ def calcDiff(user_id):
       Result:
           the list of revisions contributed by user and the for each revision it has the Longevity value in no of revision and time.
        """
-    with open('user_data/rev_list_' + user_id + '-o.json', 'r') as infile:
-        updated_data = json.loads(infile.read())
+    try:
+        with open('user_data/rev_list_' + user_id + '-o.json', 'r') as infile:
+            updated_data = json.loads(infile.read())
 
-    for row in updated_data:
-        capture_longevity = True
-        current_rev = util.read_file('rev_user/' + str(row['revid']))
+        for row in updated_data:
+            print("Picking For Analysis Artcile,Parent,Revision: ", [row['pageid'], row['parentid'], row['revid']])
+            capture_longevity = True
+            current_rev = util.read_file('rev_user/' + str(row['revid']))
 
-        if row['parentid'] == 0:
-            original_text = current_rev
-        else:
-            parent_rev = util.read_file('rev_user/' + str(row['parentid']))
-            original_text = util.findDiffRevised(parent_rev, current_rev)
-            original_text = list(v[1] for v in original_text)
-            original_text = [w for w in original_text if len(w) > 0]
-            original_text = [util.stop_word_removal(w) for w in original_text]
-            small_text = [w for w in original_text if len(w) < 5]
+            if row['parentid'] == 0:
+                original_text = current_rev
+            else:
+                parent_rev = util.read_file('rev_user/' + str(row['parentid']))
+                original_text = util.findDiffRevised(parent_rev, current_rev)
+                original_text = list(v[1] for v in original_text)
+                original_text = [w for w in original_text if len(w) > 1]
+                small_text = [w for w in original_text if len(w) < 5]
 
-            total = 0
-            for txt in original_text:
-                total += len(txt)
+                total = 0
+                for txt in original_text:
+                    total += len(txt)
 
-            row['contribLength'] = total
-            row['originaltext'] = original_text
-            row['small_text'] = small_text
+                row['contribLength'] = total
+                row['originaltext'] = original_text
+                row['small_text'] = small_text
 
-            next_revs = [i for i in row['next_rev']]
-            if total > 0 and len(next_revs) > 5:
-                start_time = dateparser.parse(row['timestamp'])
-                print([row['pageid'], row['parentid'], row['revid'], total])
-                index = 0
-                for rev in next_revs:
-                    try:
-                        next_rev = util.read_file('rev_user/' + str(rev['revid']))
-                        d_text = util.getInsertedContentSinceParentRevision(parent_rev, next_rev)
-                        d_text = util.stop_word_removal(d_text)
-                        ratio = util.textPreservedRatio(original_text, d_text)
-                        if ratio < 0.95 and capture_longevity:
-                            end_time = dateparser.parse(rev['timestamp'])
-                            row['longevityTime'] = round((end_time - start_time).total_seconds() / 3600, 2)
-                            row['longevityRev'] = index
-                            capture_longevity = False
-                            break
-                        rev['matchRatio'] = ratio
-                    except:
-                        print("file error")
-                        index -= 1
-                    index += 1
-                if capture_longevity:
-                    row['longevityRev'] = index
-
-    with open('user_data/rev_list_' + user_id + '-dp.json', 'w') as outfile:
-        json.dump(updated_data, outfile)
+                next_revs = [i for i in row['next_rev']]
+                if total > 0:
+                    start_time = dateparser.parse(row['timestamp'])
+                    print("Performing Diff For Artcile,Parent,Revision: ",
+                          [row['pageid'], row['parentid'], row['revid'], total])
+                    index = 0
+                    for rev in next_revs:
+                        try:
+                            next_rev = util.read_file('rev_user/' + str(rev['revid']))
+                            d_text = util.getInsertedContentSinceParentRevision(parent_rev, next_rev)
+                            ratio = util.textPreservedRatioBigram(original_text, d_text)
+                            print("ratio: ", ratio)
+                            if ratio < 0.95 and capture_longevity:
+                                end_time = dateparser.parse(rev['timestamp'])
+                                row['longevityTime'] = round((end_time - start_time).total_seconds() / 3600, 2)
+                                row['longevityRev'] = index
+                                row['matchRatio'] = ratio
+                                capture_longevity = False
+                                print("longevity-S: ", index)
+                                break
+                        except Exception as e:
+                            print("file error", e.message)
+                            index -= 1
+                        index += 1
+                    if capture_longevity:
+                        row['longevityRev'] = index
+                        row['longevityTime'] = round((end_time - start_time).total_seconds() / 3600, 2)
+                        row['matchRatio'] = ratio
+                        print("longevity-L: ", index)
+        if len(updated_data) > 0:
+            with open('user_data_50_90_b_1/rev_list_' + user_id + '-dp.json', 'w') as outfile:
+                json.dump(updated_data, outfile)
+    except Exception as e:
+        print("skipping diff as no contribution: ", e)
 
 
 def plotGraphForLongevity(userid):
@@ -275,32 +289,43 @@ def getPlainText(pageID):
         outfile.write(txt['query']['pages'][pageID]['extract'])
 
 
-def testExtractOriginalContribution():
-    source = "abc ghi mno"
-    destination = "abc def ghi jkl mno"
-
-    ratio = util.findDiffRevised(source, destination)
-    print(ratio)
-
-
-def testDiffOfContributions():
-    parent_rev = [
-        "I think the article could  widfdfdth a review.\nFrom memory dfdfdidn't one of our pilots get some dirty US looks for canceling a mission when he decided he couldn't reliably isolate the intended target, as per his Aust. orders accuracy in avoiding civilians had top priority.",
-        "Thanks Cunch. I a guess you are right."]
-    current_rev = util.read_file('rev_user/22272908')
-
-    ratio = util.textPreservedRatio([parent_rev[1]], current_rev)
-    print(ratio)
-
-
 def testDiffOfContributionStrict():
     parent_rev = [
         "I think the article could  widfdfdth a review.\nFrom memory dfdfdidn't one of our pilots get some dirty US looks for canceling a mission when he decided he couldn't reliably isolate the intended target, as per his Aust. orders accuracy in avoiding civilians had top priority.",
-        "Thanks Cunch. I a guess you are right"]
-    current_rev = util.read_file('rev_user/22272908')
+        "Thanks Cunch. I a guess you are ."]
+    current_rev = util.read_file('22272908')
 
-    ratio = util.textPreservedRatioBigram([parent_rev[1]], current_rev)
+    ratio = util.textPreservedRatioStrict([parent_rev[1]], current_rev)
     print(ratio)
+
+
+def processData(row):
+    if row['status'] == 1:
+        index = row[0]
+        print(row)
+        print("Index: " + str(index))
+        userid = str(row['id'])
+        #         if getUserContrib(userid) >0:
+        #             organizeData(userid)
+        calcDiff(userid)
+        #             user_data.iloc[index, 4:5] = 1
+        #         else:
+        #              user_data.iloc[index, 4:5] = 2
+
+        print("Saving Status for User ", user_data.iloc[index, :])
+        # user_data.to_csv("all_user_data_c.csv")
+
+
+def updateStatusInCSVForDiff():
+    for row in user_data.iterrows():
+        ids = str(row[1]['id'])
+        path = 'user_data_50_90_s/rev_list_' + ids + '-dp.json'
+        print(path)
+        if os.path.isfile(path) == 1:
+            user_data.iloc[row[0], 4:5] = 1
+            print('Exist')
+
+    user_data.to_csv("csv/all_user_data_c_50_90_s.csv")
 
 
 if __name__ == "__main__":
@@ -311,16 +336,16 @@ if __name__ == "__main__":
     # code to fetch revision of a users, organize them and calculate longevity.
     # Uncomment if you wnat to do it for a new user
 
-    #getUserContrib(userid)
+    # getUserContrib(userid)
     # getUserContribLast(userid)
     # organizeData(userid)
     # calcDiff(userid)
 
-    #plotGraphForLongevity(userid)
+    # plotGraphForLongevity(userid)
     # plotGraphTrustScore(userid)
 
     # getAllUsers()
 
-    # test cases
-    #testExtractOriginalContribution()
-    testDiffOfContributionStrict()
+    user_data = pd.read_csv("csv/all_user_data_c_50_90_s.csv")
+    user_data.parallel_apply(processData, axis=1)
+    # updateStatusInCSVForDiff()

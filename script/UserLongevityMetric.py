@@ -201,7 +201,7 @@ def calcDiff(user_id):
                         try:
                             next_rev = util.read_file('rev_user/' + str(rev['revid']))
                             d_text = util.getInsertedContentSinceParentRevision(parent_rev, next_rev)
-                            ratio = util.textPreservedRatioBigram(original_text, d_text)
+                            ratio = util.textPreservedRatioStrict(original_text, d_text)
                             print("ratio: ", ratio)
                             if ratio < 0.95 and capture_longevity:
                                 end_time = dateparser.parse(rev['timestamp'])
@@ -217,6 +217,7 @@ def calcDiff(user_id):
                         index += 1
                     if capture_longevity:
                         row['longevityRev'] = index
+                        end_time = dateparser.parse(rev['timestamp'])
                         row['longevityTime'] = round((end_time - start_time).total_seconds() / 3600, 2)
                         row['matchRatio'] = ratio
                         print("longevity-L: ", index)
@@ -329,7 +330,7 @@ def updateStatusInCSVForDiff():
 
 
 if __name__ == "__main__":
-    userid = '15'  # spammer
+    userid = '415269'  # spammer
     # "userid": 39180130,  commit vandal once
     # "userid": 415269,  good user
 
@@ -339,13 +340,13 @@ if __name__ == "__main__":
     # getUserContrib(userid)
     # getUserContribLast(userid)
     # organizeData(userid)
-    # calcDiff(userid)
+    calcDiff(userid)
 
     # plotGraphForLongevity(userid)
     # plotGraphTrustScore(userid)
 
     # getAllUsers()
 
-    user_data = pd.read_csv("csv/all_user_data_c_50_90_s.csv")
-    user_data.parallel_apply(processData, axis=1)
+#    user_data = pd.read_csv("csv/all_user_data_c_50_90_s.csv")
+    # user_data.apply(processData, axis=1)
     # updateStatusInCSVForDiff()

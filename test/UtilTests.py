@@ -13,6 +13,7 @@ class TestUtil(unittest.TestCase):
         strAfterProcess = "A quick brown fox jump lazy dog"
 
         output = util.stop_word_removal(str)
+        output = util.detokenize(output)
         self.assertEqual(strAfterProcess, output)
 
     def test_shouldSentenceTokenWork(self):
@@ -118,6 +119,35 @@ class TestUtil(unittest.TestCase):
         ratio = util.textPreservedRatioBigram(o_text, d_text)
 
         self.assertEqual(ratio, 0.5)
+
+    def test_bigramMethodEnhanced(self):
+
+        o_text = ['Cant See this weather. I am fine', 'intersteller was nice movie']
+        d_text = 'I am fine, how about you? this weather is really hot and humid. ' \
+                 'One needs to hydrate regularly to survive.'
+
+        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+
+        self.assertEqual(ratio, 0.12)
+
+        o_text = ['One needs to hydrate regularly to survive.', 'this weather really']
+
+        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+
+        self.assertEqual(ratio, 1.0)
+
+
+        o_text = ['One needs', 'two three']
+
+        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+
+        self.assertEqual(ratio, 0.5)
+
+        o_text = ['One needs to regularly to survive.']
+
+        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+
+        self.assertEqual(ratio, 1.0)
 
     def test_ExtractOriginalContribution(self):
         source = "abc ghi mno"

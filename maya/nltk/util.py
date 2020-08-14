@@ -43,7 +43,7 @@ def stop_word_removal(text, lang="en"):
     stopword = stopwords.words('english')
     word_tokens = nltk.word_tokenize(text)
     removing_stopwords = [word for word in word_tokens if word not in stopword]
-    return detokenize(removing_stopwords)
+    return removing_stopwords
 
 
 def extract_lemma(text, lang="en"):
@@ -291,6 +291,70 @@ def textPreservedRatioBigram(o_text, d_text):
     return round(total_matched / total, 2)
 
 
+def textPreservedRatioBigramEnhanced(o_text, d_text):
+    """
+   Compute the ratio of preserved text between two revisions using Bigram method
+   including removing stopwords and matched words
+
+   Args:
+       o_text (list): a list of elements of the form [index of insertion position, text to be inserted]
+       d_text (str): text content of the destination revision.
+
+   Result:
+       ratio of preserved text (real).
+    """
+    total = 0
+    total_matched = 0
+    dest_tokens_st = stop_word_removal(d_text)
+
+    for text in o_text:
+        for sent_token in sent_tokenize(text):
+            sent_token_st = stop_word_removal(sent_token)
+            res = isSubListInListWithIndex(sent_token_st, dest_tokens_st)
+            if res[0]:
+                total_matched += sum(map(len, sent_token_st))
+                total += sum(map(len, sent_token_st))
+                del dest_tokens_st[res[1]:res[1] + len(sent_token_st)]
+            else:
+                bigrams = list(nltk.bigrams(sent_token_st))
+                sizeList = len(bigrams)
+                if sizeList > 1:
+                    index = 0
+                    tmp_tokens = dest_tokens_st.copy()
+                    removal_index = 0
+                    while index < sizeList:
+                        wordToMatch = list(bigrams[index])
+
+                        if index == 0:
+                            res = isSubListInListWithIndex(wordToMatch, tmp_tokens)
+                            if res[0]:
+                                total_matched += len(wordToMatch[0])
+                                removal_index = deleteFromList(dest_tokens_st, res[1], removal_index)
+                        else:
+                            wordToMatchL = list(bigrams[index - 1])
+                            leftMatch = isSubListInListWithIndex(wordToMatchL, tmp_tokens)
+                            rightMatch = isSubListInListWithIndex(wordToMatch, tmp_tokens)
+                            if leftMatch[0] or rightMatch[0]:
+                                total_matched += len(wordToMatch[0])
+                                removal_index = deleteFromList(dest_tokens_st, rightMatch[1], removal_index)
+
+                            # adding the last element
+                            if index + 1 == sizeList and rightMatch[0]:
+                                total_matched += len(wordToMatch[1])
+                                removal_index = deleteFromList(dest_tokens_st, rightMatch[1] + 1, removal_index)
+
+                        index += 1
+
+                total += sum(map(len, sent_token_st))
+
+    return round(total_matched / total, 2)
+
+
+def deleteFromList(list, index, offset):
+    del list[index - offset]
+    return offset + 1
+
+
 def isSubListInList(sublist, list):
     occ = [i for i, a in enumerate(list) if a == sublist[0]]
 
@@ -301,3 +365,16 @@ def isSubListInList(sublist, list):
         if len(occ) - 1 == occ.index(b):
             return False
             break
+
+
+def isSubListInListWithIndex(sublist, list):
+    occ = [i for i, a in enumerate(list) if a == sublist[0]]
+
+    for b in occ:
+        if list[b:b + len(sublist)] == sublist:
+            return (True, b)
+            break
+        if len(occ) - 1 == occ.index(b):
+            return (False, b)
+            break
+    return (False, -1)

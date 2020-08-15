@@ -364,7 +364,7 @@ def deleteFromList(list, indexes):
         index = index+1
 
 
-
+'''
 def isSubListInList(sublist, list):
     occ = [i for i, a in enumerate(list) if a == sublist[0]]
 
@@ -375,6 +375,23 @@ def isSubListInList(sublist, list):
         if len(occ) - 1 == occ.index(b):
             return False
             break
+'''
+
+def isSubListInList(sublist, alist):
+    """
+   Predicates that checks if a list is included in another one
+
+   Args:
+       sublist (list): a (sub)-list of elements.
+       alist (list): a list in which to look if the sublist is included in.
+
+   Result:
+       True if the sublist is included in the list. False otherwise.
+    """    
+	for i in range(len(alist) - len(sublist) + 1):
+		if sublist == alist[i: i + len(sublist)]:
+			return True
+	return False
 
 
 def isSubListInListWithIndex(sublist, list):

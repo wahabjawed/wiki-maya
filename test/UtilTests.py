@@ -122,6 +122,14 @@ class TestUtil(unittest.TestCase):
 
     def test_bigramMethodEnhanced(self):
 
+
+        o_text = ['(2001) ', ' is that terrapin nests and eggs were found last year,', ', Hampshire)', ' very', '<em>', '</em>']
+        d_text ="The '''''', ''Trachemys scripta elegans'' is native to the southern [[nited States]], and has become common in the UKIt is a medium-ration to a tortoise, ranging in sizeKeared terrapins are not native,,(2001)  is that terrapin nests and eggs were found last year,t[[snapping turtles]]6, Hampshire) very'''', tterrapins are members of the group [[]], referring to reptiles with a shell, which contains"
+
+        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+
+        self.assertEqual(ratio, 0.99)
+
         o_text = ['Cant See this weather. I am fine', 'intersteller was nice movie']
         d_text = 'I am fine, how about you? this weather is really hot and humid. ' \
                  'One needs to hydrate regularly to survive.'

@@ -306,6 +306,7 @@ def textPreservedRatioBigramEnhanced(o_text, d_text):
     total = 0
     total_matched = 0
     dest_tokens_st = stop_word_removal(d_text)
+    delOffset = 0
 
     for text in o_text:
         for sent_token in sent_tokenize(text):
@@ -329,39 +330,51 @@ def textPreservedRatioBigramEnhanced(o_text, d_text):
                                 res = isSubListInListWithIndex(wordToMatch, dest_tokens_st)
                                 if res[0]:
                                     total_matched += len(wordToMatch[0])
-                                    indexToRemove.append(res[1])
+                                    indexToRemove.append((res[1], delOffset))
                             else:
                                 wordToMatchL = list(bigrams[index - 1])
                                 leftMatch = isSubListInListWithIndex(wordToMatchL, dest_tokens_st)
                                 rightMatch = isSubListInListWithIndex(wordToMatch, dest_tokens_st)
                                 if leftMatch[0]:
                                     total_matched += len(wordToMatch[0])
-                                    indexToRemove.append(leftMatch[1]+1)
+                                    indexToRemove.append((leftMatch[1] + 1, delOffset))
                                 elif rightMatch[0]:
                                     total_matched += len(wordToMatch[0])
-                                    indexToRemove.append(rightMatch[1])
+                                    indexToRemove.append((rightMatch[1], delOffset))
 
                                 # adding the last element
                                 if index + 1 == sizeList and rightMatch[0]:
                                     total_matched += len(wordToMatch[1])
-                                    indexToRemove.append(rightMatch[1] + 1)
+                                    indexToRemove.append((rightMatch[1] + 1, delOffset))
 
                             index += 1
-                        #     if index % 2 == 0:
-                        #         deleteFromList(dest_tokens_st, indexToRemove[0:-1])
-                        #         del indexToRemove[0:-1]
-                        # deleteFromList(dest_tokens_st, indexToRemove)
+                            if index % 2 == 0:
+                                delOffset = deleteFromList(dest_tokens_st, indexToRemove[0:-1], delOffset)
+                                del indexToRemove[0:-1]
+                        delOffset = deleteFromList(dest_tokens_st, indexToRemove, delOffset)
                     total += sum(map(len, sent_token_st))
-
 
     return round(total_matched / total, 2)
 
 
-def deleteFromList(list, indexes):
-    index = 0
+def deleteFromList(alist, indexes, delOffset):
+    """
+       deletes from the list at certain indexes
+
+       Args:
+           alist (list): a list of elements.
+           indexes (array): an array of index to delete at.
+
+       Result:
+           the updated offset after delete operation
+        """
+    isFirstIteration = True
     for i in indexes:
-        del list[i - index]
-        index = index+1
+        if i[0] + i[1] - delOffset >= 0:
+            del alist[i[0] + i[1] - delOffset]
+            delOffset = delOffset + 1
+
+    return delOffset
 
 
 '''
@@ -377,6 +390,7 @@ def isSubListInList(sublist, list):
             break
 '''
 
+
 def isSubListInList(sublist, alist):
     """
    Predicates that checks if a list is included in another one
@@ -387,21 +401,25 @@ def isSubListInList(sublist, alist):
 
    Result:
        True if the sublist is included in the list. False otherwise.
-    """    
-	for i in range(len(alist) - len(sublist) + 1):
-		if sublist == alist[i: i + len(sublist)]:
-			return True
-	return False
+    """
+    for i in range(len(alist) - len(sublist) + 1):
+        if sublist == alist[i: i + len(sublist)]:
+            return True
+    return False
 
 
-def isSubListInListWithIndex(sublist, list):
-    occ = [i for i, a in enumerate(list) if a == sublist[0]]
+def isSubListInListWithIndex(sublist, alist):
+    """
+   Predicates that checks if a list is included in another one
 
-    for b in occ:
-        if list[b:b + len(sublist)] == sublist:
-            return (True, b)
-            break
-        if len(occ) - 1 == occ.index(b):
-            return (False, b)
-            break
-    return (False, -1)
+   Args:
+       sublist (list): a (sub)-list of elements.
+       alist (list): a list in which to look if the sublist is included in.
+
+   Result:
+       (True, Index) if the sublist is included in the list. False otherwise.
+    """
+    for i in range(len(alist) - len(sublist) + 1):
+        if sublist == alist[i: i + len(sublist)]:
+            return True, i
+    return False, -1

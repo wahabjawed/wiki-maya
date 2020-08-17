@@ -1,11 +1,10 @@
 import difflib
-from difflib import SequenceMatcher
 import math
 import re
 import string
+from difflib import SequenceMatcher
 
 import nltk
-from enchant.utils import xrange
 from nltk import word_tokenize, pos_tag, ne_chunk
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
@@ -102,11 +101,15 @@ def check_grammar_error_rate(tool, text, count):
 
 
 def cleanhtml(raw_html):
-    cleanr = re.compile('{{((?!{{).)*}}|\[\[(.*Category|category|Image|fr|nl|de).*\]\]')
+    cleanr = re.compile('{{((?!{{).)*}}|\[\[(Category|category|Image|fr|nl|de).*\]\]')
     cleantext = re.sub(cleanr, '', raw_html)
     cleanr = re.compile('(==References|==Footnotes)((?:[^\n][\n]?)+)')
     cleantext = re.sub(cleanr, '', cleantext)
-    cleanr = re.compile('({{)([\s\S]*?)(}})|\[\[|\]\]|(==.*==)|<.*?>|\[http((?!\]).)*\]')
+    cleanr = re.compile('({{)([\s\S]*?)(}})|\[\[|\]\]|\*\[\[')
+    cleantext = re.sub(cleanr, '', cleantext)
+    cleanr = re.compile('(==|==)|<.*?>')
+    cleantext = re.sub(cleanr, '', cleantext)
+    cleanr = re.compile('\[http((?!\]).)*\]')
     cleantext = re.sub(cleanr, '', cleantext)
     cleanr = re.compile('http\S+')
     cleantext = re.sub(cleanr, '', cleantext)
@@ -368,7 +371,6 @@ def deleteFromList(alist, indexes, delOffset):
        Result:
            the updated offset after delete operation
         """
-    isFirstIteration = True
     for i in indexes:
         if i[0] + i[1] - delOffset >= 0:
             del alist[i[0] + i[1] - delOffset]

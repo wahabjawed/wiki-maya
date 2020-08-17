@@ -158,57 +158,79 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(ratio, 1.0)
 
 
-    def test_bigramMethodEnhancedClean(self):
+    def test_removeWikiSyntax(self):
+
+        stringWiki = "'''3rd/4th Cavalry Regiment''' is an armoured [[regiment]] of the [[Australian Army]], and is third in seniority in the [[Royal Australian Armoured Corps]]. The regiment was formed in [[1981]] through the amalgamation of the '''3rd Cavalry Regiment''' and the '''4th Cavalry Regiment'''." \
+'==3rd Cavalry==' \
+"The 3rd Cavalry Regiment was formed in [[1966]] as '''1st Armoured Personnel Carrier Squadron''' by the redesignation of a troop from the [[4th/19th Prince of Wales's Light Horse]], before being designated the 3rd Cavalry the same year. This unit saw extensive service throughout Australia's presence in [[Vietnam War|Vietnam]] as part of the [[Australian Task Force]]. At the time, the regiment consisted of a single squadron. However, part of A Squadron was redesignated first as 1 APC Squadron, then as B Squadron in [[1967]]-[[1968|68]]. The two squadrons swapped titles at various times until [[1971]], when A Squadron was transferred to the [[2nd Cavalry Regiment]]."\
+'==4th Cavalry==' \
+'The 4th Cavalry Regiment was formed in [[1971]] by the redesignation of B Squadron, [[2nd Cavalry Regiment|2nd Cavalry]] as A Squadron. This was joined in [[1975]] by a newly raised Regimental Headquarters and B Squadron. The service of the regiment was short lived, as in 1981 it was decided to amalgamate it with the 3rd Cavalry Regiment to form the 3rd/4th Cavalry Regiment.' \
+'==Current Role==' \
+'The 3rd/4th Cavalry Regiment currently consists of a single squadron, B Squadron. It serves as an [[armoured personnel carrier]] squadron, equipped with the [[M113]] vehicle, in the light armoured role.'\
+\
+"*'''Battle Honours'''"\
+"**(inherited battle honours of 3rd Cavalry Regiment)"\
+"**Long Tan, Bien Hoa, Coral-Balmoral, Hat Dich, Binh Ba, Vietnam 1965-72"\
+\
+"[[Category:Australian regiments]]"
+
+        stringClean = ""
+        stringWikiP = util.cleanhtml(stringWiki)
+
+        self.assertEqual(stringClean, stringWikiP)
 
 
-        o_text = ['(2001) ', ' is that terrapin nests and were found last year,', ', Hampshire)', ' very', '<em>', '</em>']
-
-        for i in range(len(o_text)):
-            o_text[i] = util.cleanhtml(o_text[i])
-
-        d_text = util.cleanhtml("The '''''', ''Trachemys scripta elegans'' is native to the southern [[nited States]], and has become common in the UKIt is a medium-ration to a tortoise, ranging in sizeKeared terrapins are not native,,(2001)  is that terrapin nests and eggs were found last year,t[[snapping turtles]]6, Hampshire) very'''', tterrapins are members of the group [[]], referring to reptiles with a shell, which contains")
-
-        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
-
-        self.assertEqual(ratio, 1.0)
-
-        o_text = ['Cant See this weather. I am fine', 'intersteller was nice movie']
-        d_text = util.cleanhtml('I am fine, how about you? this weather is really hot and humid. ' \
-                 'One needs to hydrate regularly to survive.')
-
-        for i in range(len(o_text)):
-            o_text[i] = util.cleanhtml(o_text[i])
-
-        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
-
-        self.assertEqual(ratio, 0.12)
-
-        o_text = ['One needs to hydrate regularly to survive.', 'this weather really']
-
-        for i in range(len(o_text)):
-            o_text[i] = util.cleanhtml(o_text[i])
-
-        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
-
-        self.assertEqual(ratio, 1.0)
-
-        o_text = ['One needs', 'two three']
-
-        for i in range(len(o_text)):
-            o_text[i] = util.cleanhtml(o_text[i])
-
-        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
-
-        self.assertEqual(ratio, 0.5)
-
-        o_text = ['One needs to regularly to survive.']
-
-        for i in range(len(o_text)):
-            o_text[i] = util.cleanhtml(o_text[i])
-
-        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
-
-        self.assertEqual(ratio, 1.0)
+    # def test_bigramMethodEnhancedClean(self):
+    #
+    #
+    #     o_text = ['(2001) ', ' is that terrapin nests and were found last year,', ', Hampshire)', ' very', '<em>', '</em>']
+    #
+    #     for i in range(len(o_text)):
+    #         o_text[i] = util.cleanhtml(o_text[i])
+    #
+    #     d_text = util.cleanhtml("The '''''', ''Trachemys scripta elegans'' is native to the southern [[nited States]], and has become common in the UKIt is a medium-ration to a tortoise, ranging in sizeKeared terrapins are not native,,(2001)  is that terrapin nests and eggs were found last year,t[[snapping turtles]]6, Hampshire) very'''', tterrapins are members of the group [[]], referring to reptiles with a shell, which contains")
+    #
+    #     ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+    #
+    #     self.assertEqual(ratio, 1.0)
+    #
+    #     o_text = ['Cant See this weather. I am fine', 'intersteller was nice movie']
+    #     d_text = util.cleanhtml('I am fine, how about you? this weather is really hot and humid. ' \
+    #              'One needs to hydrate regularly to survive.')
+    #
+    #     for i in range(len(o_text)):
+    #         o_text[i] = util.cleanhtml(o_text[i])
+    #
+    #     ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+    #
+    #     self.assertEqual(ratio, 0.12)
+    #
+    #     o_text = ['One needs to hydrate regularly to survive.', 'this weather really']
+    #
+    #     for i in range(len(o_text)):
+    #         o_text[i] = util.cleanhtml(o_text[i])
+    #
+    #     ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+    #
+    #     self.assertEqual(ratio, 1.0)
+    #
+    #     o_text = ['One needs', 'two three']
+    #
+    #     for i in range(len(o_text)):
+    #         o_text[i] = util.cleanhtml(o_text[i])
+    #
+    #     ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+    #
+    #     self.assertEqual(ratio, 0.5)
+    #
+    #     o_text = ['One needs to regularly to survive.']
+    #
+    #     for i in range(len(o_text)):
+    #         o_text[i] = util.cleanhtml(o_text[i])
+    #
+    #     ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+    #
+    #     self.assertEqual(ratio, 1.0)
 
     def test_ExtractOriginalContribution(self):
         source = "abc ghi mno"

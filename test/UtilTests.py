@@ -157,6 +157,59 @@ class TestUtil(unittest.TestCase):
 
         self.assertEqual(ratio, 1.0)
 
+
+    def test_bigramMethodEnhancedClean(self):
+
+
+        o_text = ['(2001) ', ' is that terrapin nests and were found last year,', ', Hampshire)', ' very', '<em>', '</em>']
+
+        for i in range(len(o_text)):
+            o_text[i] = util.cleanhtml(o_text[i])
+
+        d_text = util.cleanhtml("The '''''', ''Trachemys scripta elegans'' is native to the southern [[nited States]], and has become common in the UKIt is a medium-ration to a tortoise, ranging in sizeKeared terrapins are not native,,(2001)  is that terrapin nests and eggs were found last year,t[[snapping turtles]]6, Hampshire) very'''', tterrapins are members of the group [[]], referring to reptiles with a shell, which contains")
+
+        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+
+        self.assertEqual(ratio, 1.0)
+
+        o_text = ['Cant See this weather. I am fine', 'intersteller was nice movie']
+        d_text = util.cleanhtml('I am fine, how about you? this weather is really hot and humid. ' \
+                 'One needs to hydrate regularly to survive.')
+
+        for i in range(len(o_text)):
+            o_text[i] = util.cleanhtml(o_text[i])
+
+        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+
+        self.assertEqual(ratio, 0.12)
+
+        o_text = ['One needs to hydrate regularly to survive.', 'this weather really']
+
+        for i in range(len(o_text)):
+            o_text[i] = util.cleanhtml(o_text[i])
+
+        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+
+        self.assertEqual(ratio, 1.0)
+
+        o_text = ['One needs', 'two three']
+
+        for i in range(len(o_text)):
+            o_text[i] = util.cleanhtml(o_text[i])
+
+        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+
+        self.assertEqual(ratio, 0.5)
+
+        o_text = ['One needs to regularly to survive.']
+
+        for i in range(len(o_text)):
+            o_text[i] = util.cleanhtml(o_text[i])
+
+        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+
+        self.assertEqual(ratio, 1.0)
+
     def test_ExtractOriginalContribution(self):
         source = "abc ghi mno"
         destination = "abc def ghi jkl mno"

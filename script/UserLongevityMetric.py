@@ -157,7 +157,7 @@ def organizeData(userid):
         json.dump(updated_data, outfile)
 
 
-def calcDiff(user_id):
+def calcDiff(user_id, should_clean = False):
     """
       It calculates the longevity of the contribution of user in the next 50 revision
       Args:
@@ -173,11 +173,15 @@ def calcDiff(user_id):
             print("Picking For Analysis Artcile,Parent,Revision: ", [row['pageid'], row['parentid'], row['revid']])
             capture_longevity = True
             current_rev = util.read_file('rev_user/' + str(row['revid']))
+            if should_clean:
+                current_rev = util.cleanhtml(current_rev)
 
             if row['parentid'] == 0:
                 original_text = current_rev
             else:
                 parent_rev = util.read_file('rev_user/' + str(row['parentid']))
+                if should_clean:
+                    parent_rev = util.cleanhtml(parent_rev)
                 original_text = util.findDiffRevised(parent_rev, current_rev)
                 original_text = list(v[1] for v in original_text)
                 original_text = [w for w in original_text if len(w) > 1]
@@ -200,6 +204,8 @@ def calcDiff(user_id):
                     for rev in next_revs:
                         try:
                             next_rev = util.read_file('rev_user/' + str(rev['revid']))
+                            if should_clean:
+                                next_rev = util.cleanhtml(next_rev)
                             d_text = util.getInsertedContentSinceParentRevision(parent_rev, next_rev)
                             ratio = util.textPreservedRatioStrict(original_text, d_text)
                             print("ratio: ", ratio)

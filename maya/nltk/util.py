@@ -327,13 +327,13 @@ def textPreservedRatioBigramEnhanced(o_text, d_text):
                             wordToMatch = list(bigrams[index])
 
                             if index == 0:
-                                res = isSubListInListWithIndex(wordToMatch, dest_tokens_st)
-                                if res[0]:
+                                leftMatch = isSubListInListWithIndex(wordToMatch, dest_tokens_st)
+                                if leftMatch[0]:
                                     total_matched += len(wordToMatch[0])
-                                    indexToRemove.append((res[1], delOffset))
+                                    indexToRemove.append((leftMatch[1], delOffset))
                             else:
                                 wordToMatchL = list(bigrams[index - 1])
-                                leftMatch = isSubListInListWithIndex(wordToMatchL, dest_tokens_st)
+                                #leftMatch = isSubListInListWithIndex(wordToMatchL, dest_tokens_st)
                                 rightMatch = isSubListInListWithIndex(wordToMatch, dest_tokens_st)
                                 if leftMatch[0]:
                                     total_matched += len(wordToMatch[0])

@@ -180,57 +180,71 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(stringClean, stringWikiP)
 
 
-    # def test_bigramMethodEnhancedClean(self):
-    #
-    #
-    #     o_text = ['(2001) ', ' is that terrapin nests and were found last year,', ', Hampshire)', ' very', '<em>', '</em>']
-    #
-    #     for i in range(len(o_text)):
-    #         o_text[i] = util.cleanhtml(o_text[i])
-    #
-    #     d_text = util.cleanhtml("The '''''', ''Trachemys scripta elegans'' is native to the southern [[nited States]], and has become common in the UKIt is a medium-ration to a tortoise, ranging in sizeKeared terrapins are not native,,(2001)  is that terrapin nests and eggs were found last year,t[[snapping turtles]]6, Hampshire) very'''', tterrapins are members of the group [[]], referring to reptiles with a shell, which contains")
-    #
-    #     ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
-    #
-    #     self.assertEqual(ratio, 1.0)
-    #
-    #     o_text = ['Cant See this weather. I am fine', 'intersteller was nice movie']
-    #     d_text = util.cleanhtml('I am fine, how about you? this weather is really hot and humid. ' \
-    #              'One needs to hydrate regularly to survive.')
-    #
-    #     for i in range(len(o_text)):
-    #         o_text[i] = util.cleanhtml(o_text[i])
-    #
-    #     ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
-    #
-    #     self.assertEqual(ratio, 0.12)
-    #
-    #     o_text = ['One needs to hydrate regularly to survive.', 'this weather really']
-    #
-    #     for i in range(len(o_text)):
-    #         o_text[i] = util.cleanhtml(o_text[i])
-    #
-    #     ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
-    #
-    #     self.assertEqual(ratio, 1.0)
-    #
-    #     o_text = ['One needs', 'two three']
-    #
-    #     for i in range(len(o_text)):
-    #         o_text[i] = util.cleanhtml(o_text[i])
-    #
-    #     ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
-    #
-    #     self.assertEqual(ratio, 0.5)
-    #
-    #     o_text = ['One needs to regularly to survive.']
-    #
-    #     for i in range(len(o_text)):
-    #         o_text[i] = util.cleanhtml(o_text[i])
-    #
-    #     ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
-    #
-    #     self.assertEqual(ratio, 1.0)
+    def test_bigramMethodEnhancedClean(self):
+
+        o_text = ['Old Hittite has th', 'of', "where Cuneiform Luwian instead uses the ''-ssa'' adjectival suffix. ", ', on the northern border of both, like later', 'eroglyphic Luwian has', "an ''-as'' genitive and an ''-asa'' adjectival suffix. Palaic also shows the same gender distinction as seen in Hittite, i.e. animate vs. inanimate; and has similar pronoun forms. Therefore Palaic is thought to belong to the Anatolian languages, although whether as a sister language to Old Hittite or Cuneiform Luwian is un", 'nown']
+
+        d_text = "\n"\
+", the capital of the HittitesHittite language|(Anatolia)|Pala  only1Emmanuel   , the leading God of the land of PalIn particular, ain Hittite foriparwa and associated deities, includes passages stating, \"The Old Woman speaks the words of the bread in Palaic,\" or alternately \"the words of the meal,\" though no Palaic passages are quoted. The Palaic-language texts are all from a religious context, with ritual and mythological content.arruba, O. ''Das Palaische. exte, Grammatik, Lexikon.'' Wiesbaden: arrassowitz, 190. StBoT 10 Old Hittite has thofwhere Cuneiform script|Cuneiform Luwian instead uses the ''-ssa'' adjectival suffix. , on the northern border of both, like later Anatolian hieroglyph|eroglyphic Luwian hasan ''-as'' genitive and an ''-asa'' adjectival suffix. Palaic also shows the same gender distinction as seen in Hittite, i.e. animate vs. inanimate; and has similar pronoun forms. Therefore Palaic is thought to belong to the Anatolian languages, although whether as a sister language to Old Hittite or Cuneiform Luwian is unnown"\
+        "\n"\
+        "\n"\
+        "\n"\
+        "\n"\
+        "\n"\
+
+
+        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+
+        self.assertEqual(ratio, 0.74)
+
+        o_text = ['(2001) ', ' is that terrapin nests and were found last year,', ', Hampshire)', ' very', '<em>', '</em>']
+
+        for i in range(len(o_text)):
+            o_text[i] = util.cleanhtml(o_text[i])
+
+        d_text = util.cleanhtml("The '''''', ''Trachemys scripta elegans'' is native to the southern [[nited States]], and has become common in the UKIt is a medium-ration to a tortoise, ranging in sizeKeared terrapins are not native,,(2001)  is that terrapin nests and eggs were found last year,t[[snapping turtles]]6, Hampshire) very'''', tterrapins are members of the group [[]], referring to reptiles with a shell, which contains")
+
+        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+
+        self.assertEqual(ratio, 1.0)
+
+        o_text = ['Cant See this weather. I am fine', 'intersteller was nice movie']
+        d_text = util.cleanhtml('I am fine, how about you? this weather is really hot and humid. ' \
+                 'One needs to hydrate regularly to survive.')
+
+        for i in range(len(o_text)):
+            o_text[i] = util.cleanhtml(o_text[i])
+
+        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+
+        self.assertEqual(ratio, 0.12)
+
+        o_text = ['One needs to hydrate regularly to survive.', 'this weather really']
+
+        for i in range(len(o_text)):
+            o_text[i] = util.cleanhtml(o_text[i])
+
+        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+
+        self.assertEqual(ratio, 1.0)
+
+        o_text = ['One needs', 'two three']
+
+        for i in range(len(o_text)):
+            o_text[i] = util.cleanhtml(o_text[i])
+
+        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+
+        self.assertEqual(ratio, 0.5)
+
+        o_text = ['One needs to regularly to survive.']
+
+        for i in range(len(o_text)):
+            o_text[i] = util.cleanhtml(o_text[i])
+
+        ratio = util.textPreservedRatioBigramEnhanced(o_text, d_text)
+
+        self.assertEqual(ratio, 1.0)
 
     def test_ExtractOriginalContribution(self):
         source = "abc ghi mno"

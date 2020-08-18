@@ -314,59 +314,61 @@ def textPreservedRatioBigramEnhanced(o_text, d_text):
     if len(dest_tokens_st) > 0 and sum(map(len, o_text)) > 0:
         try:
             for text in o_text:
-                for sent_token in sent_tokenize(text):
-                    sent_token_st = stop_word_removal(sent_token)
-                    if len(sent_token_st) > 0:
-                        res = isSubListInListWithIndex(sent_token_st, dest_tokens_st)
-                        if res[0]:
-                            total_matched += sum(map(len, sent_token_st))
-                            total += sum(map(len, sent_token_st))
-                            del dest_tokens_st[res[1]:res[1] + len(sent_token_st)]
-                        else:
-                            bigrams = list(nltk.bigrams(sent_token_st))
-                            sizeList = len(bigrams)
-                            if sizeList > 1:
-                                index = 0
-                                indexToRemove = []
-                                while index < sizeList:
-                                    wordToMatch = list(bigrams[index])
+                if len(text) > 0:
+                    res = isSubListInListWithIndex(text, dest_tokens_st)
+                    if res[0]:
+                        total_matched += sum(map(len, text))
+                        total += sum(map(len, text))
+                        del dest_tokens_st[res[1]:res[1] + len(text)]
+                    else:
+                        bigrams = list(nltk.bigrams(text))
+                        sizeList = len(bigrams)
+                        if sizeList > 1:
+                            index = 0
+                            indexToRemove = []
+                            while index < sizeList:
+                                wordToMatch = list(bigrams[index])
 
-                                    if index == 0:
-                                        leftMatch = isSubListInListWithIndex(wordToMatch, dest_tokens_st)
-                                        if leftMatch[0]:
-                                            total_matched += len(wordToMatch[0])
-                                            indexToRemove.append((leftMatch[1], delOffset))
-                                    else:
-                                        wordToMatchL = list(bigrams[index - 1])
-                                        leftMatch = isSubListInListWithIndex(wordToMatchL, dest_tokens_st)
-                                        rightMatch = isSubListInListWithIndex(wordToMatch, dest_tokens_st)
-                                        if leftMatch[0]:
-                                            total_matched += len(wordToMatch[0])
-                                            indexToRemove.append((leftMatch[1] + 1, delOffset))
-                                        elif rightMatch[0]:
-                                            total_matched += len(wordToMatch[0])
-                                            indexToRemove.append((rightMatch[1], delOffset))
+                                if index == 0:
+                                    leftMatch = isSubListInListWithIndex(wordToMatch, dest_tokens_st)
+                                    if leftMatch[0]:
+                                        total_matched += len(wordToMatch[0])
+                                        indexToRemove.append((leftMatch[1], delOffset))
+                                else:
+                                    wordToMatchL = list(bigrams[index - 1])
+                                    leftMatch = isSubListInListWithIndex(wordToMatchL, dest_tokens_st)
+                                    rightMatch = isSubListInListWithIndex(wordToMatch, dest_tokens_st)
+                                    if leftMatch[0]:
+                                        total_matched += len(wordToMatch[0])
+                                        indexToRemove.append((leftMatch[1] + 1, delOffset))
+                                    elif rightMatch[0]:
+                                        total_matched += len(wordToMatch[0])
+                                        indexToRemove.append((rightMatch[1], delOffset))
 
-                                        # adding the last element
-                                        if index + 1 == sizeList and rightMatch[0]:
-                                            total_matched += len(wordToMatch[1])
-                                            indexToRemove.append((rightMatch[1] + 1, delOffset))
+                                    # adding the last element
+                                    if index + 1 == sizeList and rightMatch[0]:
+                                        total_matched += len(wordToMatch[1])
+                                        indexToRemove.append((rightMatch[1] + 1, delOffset))
 
-                                    index += 1
-                                    if index % 2 == 0:
-                                        delOffset = deleteFromList(dest_tokens_st, indexToRemove[0:-1], delOffset)
-                                        del indexToRemove[0:-1]
-                                delOffset = deleteFromList(dest_tokens_st, indexToRemove, delOffset)
-                            total += sum(map(len, sent_token_st))
+                                index += 1
+                                if index % 2 == 0:
+                                    delOffset = deleteFromList(dest_tokens_st, indexToRemove[0:-1], delOffset)
+                                    del indexToRemove[0:-1]
+                            delOffset = deleteFromList(dest_tokens_st, indexToRemove, delOffset)
+                        total += sum(map(len, text))
         except Exception as e:
             print("Algo Error: ", e)
             print("Source: ", o_text)
             print("Destination: ", d_text)
 
-        print("Total: ", total, "Matched: ", total_matched)
+        #print("Total: ", total, "Matched: ", total_matched)
+        if total ==0:
+            print("Source: ", o_text)
+            print("Destination: ", d_text)
         return round(total_matched / total, 2)
     else:
         return 0
+
 
 def deleteFromList(alist, indexes, delOffset):
     """

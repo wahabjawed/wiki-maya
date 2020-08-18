@@ -174,18 +174,26 @@ def calcDiff(user_id, should_clean = False):
             capture_longevity = True
             current_rev = util.read_file('rev_user/' + str(row['revid']))
             if should_clean:
-                current_rev = util.cleanhtml(current_rev)
+                current_rev = util.cleanhtml(current_rev).strip()
 
             if row['parentid'] == 0:
                 original_text = current_rev
             else:
                 parent_rev = util.read_file('rev_user/' + str(row['parentid']))
                 if should_clean:
-                    parent_rev = util.cleanhtml(parent_rev)
+                    parent_rev = util.cleanhtml(parent_rev).strip()
                 original_text = util.findDiffRevised(parent_rev, current_rev)
                 original_text = list(v[1] for v in original_text)
                 original_text = [w for w in original_text if len(w) > 1]
-                small_text = [w for w in original_text if len(w) < 5]
+
+                original_text_clean = []
+
+                for contributions in original_text:
+                    sent_toks_list = util.sent_tokenize(contributions)
+                    for sent_tok in sent_toks_list:
+                        original_text_clean.append(util.stop_word_removal(sent_tok))
+
+                original_text = original_text_clean
 
                 total = 0
                 for txt in original_text:
@@ -193,7 +201,6 @@ def calcDiff(user_id, should_clean = False):
 
                 row['contribLength'] = total
                 row['originaltext'] = original_text
-                row['small_text'] = small_text
 
                 next_revs = [i for i in row['next_rev']]
                 if total > 0:
@@ -206,25 +213,21 @@ def calcDiff(user_id, should_clean = False):
                             next_rev = util.read_file('rev_user/' + str(rev['revid']))
                             if should_clean:
                                 next_rev = util.cleanhtml(next_rev)
-                            d_text = util.getInsertedContentSinceParentRevision(parent_rev, next_rev)
+                            d_text = util.getInsertedContentSinceParentRevision(parent_rev, next_rev).strip()
                             ratio = util.textPreservedRatioStrict(original_text, d_text)
                             print("ratio: ", ratio)
-                            if ratio < 0.95 and capture_longevity:
-                                end_time = dateparser.parse(rev['timestamp'])
-                                row['longevityTime'] = round((end_time - start_time).total_seconds() / 3600, 2)
+                            if ratio < 0.90 and capture_longevity:
                                 row['longevityRev'] = index
                                 row['matchRatio'] = ratio
                                 capture_longevity = False
                                 print("longevity-S: ", index)
                                 break
                         except Exception as e:
-                            print("file error", e.message)
+                            print("file error", e)
                             index -= 1
                         index += 1
                     if capture_longevity:
                         row['longevityRev'] = index
-                        end_time = dateparser.parse(rev['timestamp'])
-                        row['longevityTime'] = round((end_time - start_time).total_seconds() / 3600, 2)
                         row['matchRatio'] = ratio
                         print("longevity-L: ", index)
         if len(updated_data) > 0:

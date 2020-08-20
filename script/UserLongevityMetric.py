@@ -87,6 +87,8 @@ def getUserContrib(user_id):
     with open('user_data_100/rev_list_' + user_id + '.json', 'w') as outfile:
         json.dump(rev_data, outfile)
 
+    return len(rev_data)
+
 
 def getUserContribLast(userid):
     """
@@ -125,38 +127,43 @@ def organizeData(userid):
       Result:
           the list of revisions contributed by user and the for each revision it has the list of next 50 revisions.
        """
-    with open('user_data_100/rev_list_' + userid + '.json', 'r') as infile:
-        data = json.loads(infile.read())
+    try:
+        with open('user_data_100/rev_list_' + userid + '.json', 'r') as infile:
+            data = json.loads(infile.read())
 
-    page_id = -1
-    parent_rev = -1
-    size = 0
-    rev_id = -1
-    count = 0
-    updated_data = []
-    for row in data:
-        if page_id == -1:
-            page_id = row['pageid']
-            parent_rev = row['parentid']
-            rev_id = row['revid']
-            size = row['size']
-        elif page_id == row['pageid'] and row['parentid'] == rev_id:
-            rev_id = row['revid']
-            row['parentid'] = parent_rev
-            size += row['size']
-            row['size'] = size
-        else:
-            page_id = row['pageid']
-            parent_rev = row['parentid']
-            rev_id = row['revid']
-            size = row['size']
-            updated_data.append(data[count - 1])
+        print("organizing file: ", userid)
+        page_id = -1
+        parent_rev = -1
+        size = 0
+        rev_id = -1
+        count = 0
+        updated_data = []
+        for row in data:
+            if page_id == -1:
+                page_id = row['pageid']
+                parent_rev = row['parentid']
+                rev_id = row['revid']
+                size = row['size']
+            elif page_id == row['pageid'] and row['parentid'] == rev_id:
+                rev_id = row['revid']
+                row['parentid'] = parent_rev
+                size += row['size']
+                row['size'] = size
+            else:
+                page_id = row['pageid']
+                parent_rev = row['parentid']
+                rev_id = row['revid']
+                size = row['size']
+                updated_data.append(data[count - 1])
 
-        count += 1
+            count += 1
 
-    print(updated_data)
-    with open('user_data_100/rev_list_' + userid + '-o.json', 'w') as outfile:
-        json.dump(updated_data, outfile)
+        updated_data.append(data[count - 1])
+
+        with open('user_data_100/rev_list_' + userid + '-o.json', 'w') as outfile:
+            json.dump(updated_data, outfile)
+    except Exception as e:
+        print("skipping orginze as no contribution: ", e)
 
 
 def calcDiff(user_id, should_clean=False):
@@ -301,7 +308,7 @@ def calcDiff_Enhanced(user_id, should_clean=False):
                             d_text = util.getInsertedContentSinceParentRevision(parent_rev, next_rev).strip()
                             ratio = util.textPreservedRatioBigramEnhanced(original_text, d_text)
                             print("ratio: ", ratio)
-                            if ratio == 0:
+                            if ratio == 0 and not hasZero:
                                 hasZero = True
                                 row['longevityRev'] = index
                                 row['matchRatio'] = ratio
@@ -395,50 +402,23 @@ def getPlainText(pageID):
         outfile.write(txt['query']['pages'][pageID]['extract'])
 
 
-def testExtractOriginalContribution():
-    source = "abc ghi mno"
-    destination = "abc def ghi jkl mno"
-
-    ratio = util.findDiffRevised(source, destination)
-    print(ratio)
-
-
-def testDiffOfContributions():
-    parent_rev = [
-        "I think the article could  widfdfdth a review.\nFrom memory dfdfdidn't one of our pilots get some dirty US looks for canceling a mission when he decided he couldn't reliably isolate the intended target, as per his Aust. orders accuracy in avoiding civilians had top priority.",
-        "Thanks Cunch. I a guess you are right."]
-    current_rev = util.read_file('rev_user/22272908')
-
-    ratio = util.textPreservedRatio([parent_rev[1]], current_rev)
-    print(ratio)
-
-
-def testDiffOfContributionStrict():
-    parent_rev = [
-        "I think the article could  widfdfdth a review.\nFrom memory dfdfdidn't one of our pilots get some dirty US looks for canceling a mission when he decided he couldn't reliably isolate the intended target, as per his Aust. orders accuracy in avoiding civilians had top priority.",
-        "Thanks Cunch. I a guess you are ."]
-    current_rev = util.read_file('22272908')
-
-    ratio = util.textPreservedRatioStrict([parent_rev[1]], current_rev)
-    print(ratio)
-
-
 def processData(row):
     if row['status'] == 1:
         index = row[0]
         print(row)
         print("Index: " + str(index))
         userid = str(row['id'])
-        if getUserContrib(userid) > 0:
-            organizeData(userid)
-            calcDiff_Enhanced(userid, True)
-        #             user_data.iloc[index, 4:5] = 1
-        #         else:
-        #              user_data.iloc[index, 4:5] = 2
+        #         if getUserContrib(userid) >0:
+        # organizeData(userid)
+        calcDiff_Enhanced(userid, True)
 
-        print("Saving Status for User ", user_data.iloc[index, :])
-        # user_data.to_csv("all_user_data_c.csv")
 
+#             user_data.iloc[index, 4:5] = 1
+#         else:
+#              user_data.iloc[index, 4:5] = 2
+
+# print("Saving Status for User ", user_data.iloc[index, :])
+# user_data.to_csv("all_user_data_c.csv")
 
 def updateStatusInCSVForDiff():
     for row in user_data.iterrows():

@@ -20,7 +20,8 @@ import os.path
 session = Session("https://en.wikipedia.org/w/api.php", user_agent="test")
 api_extractor = Extractor(session)
 
-pandarallel.initialize(nb_workers=5)
+# pandarallel.initialize(nb_workers=10)
+pandarallel.initialize()
 
 
 def getAllUsers():
@@ -54,35 +55,36 @@ def getUserContrib(user_id):
     rev_data = []
     for row in user_contrib:
         for item_contrib in row:
-            print(item_contrib)
+            print("Page ID: " + str(item_contrib['pageid']))
             if item_contrib['parentid'] == 0:
                 values = api_extractor.get_all_revision_of_page_prop(item_contrib['pageid'],
                                                                      rvprop={'ids', 'timestamp', 'userid', 'content'},
-                                                                     rv_limit=50, rvstartid=item_contrib['revid'],
-                                                                     should_continue=True, continue_until=2)
+                                                                     rv_limit=33, rvstartid=item_contrib['revid'],
+                                                                     should_continue=True, continue_until=3)
             else:
                 values = api_extractor.get_all_revision_of_page_prop(item_contrib['pageid'],
                                                                      rvprop={'ids', 'timestamp', 'userid', 'content'},
-                                                                     rv_limit=50, rvstartid=item_contrib['parentid'],
-                                                                     should_continue=True, continue_until=2)
-            for id in values:
-                try:
-                    with open('rev_user/' + str(id['revid']), 'w') as outfile:
-                        outfile.write(id['slots']['main']["*"])
-                except:
-                    print("error: ", values)
+                                                                     rv_limit=33, rvstartid=item_contrib['parentid'],
+                                                                     should_continue=True, continue_until=3)
+            if len(values) > 96:
+                for id in values:
+                    try:
+                        with open('rev_user/' + str(id['revid']), 'w') as outfile:
+                            outfile.write(id['slots']['main']["*"])
+                    except:
+                        print("error: ", values)
 
-            values.pop(0)
-            if item_contrib['parentid'] > 0:
                 values.pop(0)
+                if item_contrib['parentid'] > 0:
+                    values.pop(0)
 
-            for d in values:
-                del d['slots']
-            item_contrib['next_rev'] = values
-            rev_data.append(item_contrib)
+                for d in values:
+                    del d['slots']
+                item_contrib['next_rev'] = values
+                rev_data.append(item_contrib)
 
-    print(rev_data)
-    with open('user_data/rev_list_' + user_id + '.json', 'w') as outfile:
+    print("Total Article Count: " + str(len(rev_data)))
+    with open('user_data_100/rev_list_' + user_id + '.json', 'w') as outfile:
         json.dump(rev_data, outfile)
 
 
@@ -123,7 +125,7 @@ def organizeData(userid):
       Result:
           the list of revisions contributed by user and the for each revision it has the list of next 50 revisions.
        """
-    with open('user_data/rev_list_' + userid + '.json', 'r') as infile:
+    with open('user_data_100/rev_list_' + userid + '.json', 'r') as infile:
         data = json.loads(infile.read())
 
     page_id = -1
@@ -153,11 +155,11 @@ def organizeData(userid):
         count += 1
 
     print(updated_data)
-    with open('user_data/rev_list_' + userid + '-o.json', 'w') as outfile:
+    with open('user_data_100/rev_list_' + userid + '-o.json', 'w') as outfile:
         json.dump(updated_data, outfile)
 
 
-def calcDiff(user_id, should_clean = False):
+def calcDiff(user_id, should_clean=False):
     """
       It calculates the longevity of the contribution of user in the next 50 revision
       Args:
@@ -166,7 +168,7 @@ def calcDiff(user_id, should_clean = False):
           the list of revisions contributed by user and the for each revision it has the Longevity value in no of revision and time.
        """
     try:
-        with open('user_data/rev_list_' + user_id + '-o.json', 'r') as infile:
+        with open('user_data_100/rev_list_' + user_id + '-o.json', 'r') as infile:
             updated_data = json.loads(infile.read())
 
         for row in updated_data:
@@ -204,7 +206,7 @@ def calcDiff(user_id, should_clean = False):
 
                 next_revs = [i for i in row['next_rev']]
                 if total > 0:
-                    start_time = dateparser.parse(row['timestamp'])
+                    print(original_text)
                     print("Performing Diff For Artcile,Parent,Revision: ",
                           [row['pageid'], row['parentid'], row['revid'], total])
                     index = 0
@@ -214,11 +216,12 @@ def calcDiff(user_id, should_clean = False):
                             if should_clean:
                                 next_rev = util.cleanhtml(next_rev)
                             d_text = util.getInsertedContentSinceParentRevision(parent_rev, next_rev).strip()
-                            ratio = util.textPreservedRatioStrict(original_text, d_text)
+                            ratio = util.textPreservedRatioBigramEnhanced(original_text, d_text)
                             print("ratio: ", ratio)
                             if ratio < 0.90 and capture_longevity:
                                 row['longevityRev'] = index
                                 row['matchRatio'] = ratio
+                                row['totalContrib'] = total
                                 capture_longevity = False
                                 print("longevity-S: ", index)
                                 break
@@ -229,9 +232,102 @@ def calcDiff(user_id, should_clean = False):
                     if capture_longevity:
                         row['longevityRev'] = index
                         row['matchRatio'] = ratio
+                        row['totalContrib'] = total
                         print("longevity-L: ", index)
         if len(updated_data) > 0:
-            with open('user_data_50_90_b_1/rev_list_' + user_id + '-dp.json', 'w') as outfile:
+            with open('user_data_100_b/rev_list_' + user_id + '-dp.json', 'w') as outfile:
+                json.dump(updated_data, outfile)
+    except Exception as e:
+        print("skipping diff as no contribution: ", e)
+
+
+def calcDiff_Enhanced(user_id, should_clean=False):
+    """
+      It calculates the longevity of the contribution of user in the next 50 revision
+      Args:
+          user_id (str): user id of the user.
+      Result:
+          the list of revisions contributed by user and the for each revision it has the Longevity value in no of revision and time.
+       """
+    try:
+        with open('user_data_100/rev_list_' + user_id + '-o.json', 'r') as infile:
+            updated_data = json.loads(infile.read())
+
+        for row in updated_data:
+            print("Picking For Analysis Artcile,Parent,Revision: ", [row['pageid'], row['parentid'], row['revid']])
+            capture_longevity = True
+            current_rev = util.read_file('rev_user/' + str(row['revid']))
+            if should_clean:
+                current_rev = util.cleanhtml(current_rev).strip()
+
+            if row['parentid'] == 0:
+                original_text = current_rev
+            else:
+                parent_rev = util.read_file('rev_user/' + str(row['parentid']))
+                if should_clean:
+                    parent_rev = util.cleanhtml(parent_rev).strip()
+                original_text = util.findDiffRevised(parent_rev, current_rev)
+                original_text = list(v[1] for v in original_text)
+                original_text = [w for w in original_text if len(w) > 1]
+
+                original_text_clean = []
+
+                for contributions in original_text:
+                    sent_toks_list = util.sent_tokenize(contributions)
+                    for sent_tok in sent_toks_list:
+                        original_text_clean.append(util.stop_word_removal(sent_tok))
+
+                original_text = original_text_clean
+
+                total = 0
+                for txt in original_text:
+                    total += len(txt)
+
+                row['contribLength'] = total
+                row['originaltext'] = original_text
+
+                next_revs = [i for i in row['next_rev']]
+                if total > 0:
+                    print(original_text)
+                    print("Performing Diff For Artcile,Parent,Revision: ",
+                          [row['pageid'], row['parentid'], row['revid'], total])
+                    index = 0
+                    hasZero = False
+                    for rev in next_revs:
+                        try:
+                            next_rev = util.read_file('rev_user/' + str(rev['revid']))
+                            if should_clean:
+                                next_rev = util.cleanhtml(next_rev)
+                            d_text = util.getInsertedContentSinceParentRevision(parent_rev, next_rev).strip()
+                            ratio = util.textPreservedRatioBigramEnhanced(original_text, d_text)
+                            print("ratio: ", ratio)
+                            if ratio == 0:
+                                hasZero = True
+                                row['longevityRev'] = index
+                                row['matchRatio'] = ratio
+                                row['totalContrib'] = total
+                                print("in zero mode")
+                            elif ratio >= 0.9 and hasZero:
+                                hasZero = False
+                                print("out zero mode")
+                            if ratio < 0.90 and capture_longevity and not hasZero:
+                                row['longevityRev'] = index
+                                row['matchRatio'] = ratio
+                                row['totalContrib'] = total
+                                capture_longevity = False
+                                print("longevity-S: ", index)
+                                break
+                        except Exception as e:
+                            print("file error", e)
+                            index -= 1
+                        index += 1
+                    if capture_longevity and not hasZero:
+                        row['longevityRev'] = index
+                        row['matchRatio'] = ratio
+                        row['totalContrib'] = total
+                        print("longevity-L: ", index)
+        if len(updated_data) > 0:
+            with open('user_data_100_b/rev_list_' + user_id + '-dp.json', 'w') as outfile:
                 json.dump(updated_data, outfile)
     except Exception as e:
         print("skipping diff as no contribution: ", e)
@@ -299,6 +395,24 @@ def getPlainText(pageID):
         outfile.write(txt['query']['pages'][pageID]['extract'])
 
 
+def testExtractOriginalContribution():
+    source = "abc ghi mno"
+    destination = "abc def ghi jkl mno"
+
+    ratio = util.findDiffRevised(source, destination)
+    print(ratio)
+
+
+def testDiffOfContributions():
+    parent_rev = [
+        "I think the article could  widfdfdth a review.\nFrom memory dfdfdidn't one of our pilots get some dirty US looks for canceling a mission when he decided he couldn't reliably isolate the intended target, as per his Aust. orders accuracy in avoiding civilians had top priority.",
+        "Thanks Cunch. I a guess you are right."]
+    current_rev = util.read_file('rev_user/22272908')
+
+    ratio = util.textPreservedRatio([parent_rev[1]], current_rev)
+    print(ratio)
+
+
 def testDiffOfContributionStrict():
     parent_rev = [
         "I think the article could  widfdfdth a review.\nFrom memory dfdfdidn't one of our pilots get some dirty US looks for canceling a mission when he decided he couldn't reliably isolate the intended target, as per his Aust. orders accuracy in avoiding civilians had top priority.",
@@ -315,9 +429,9 @@ def processData(row):
         print(row)
         print("Index: " + str(index))
         userid = str(row['id'])
-        #         if getUserContrib(userid) >0:
-        #             organizeData(userid)
-        calcDiff(userid)
+        if getUserContrib(userid) > 0:
+            organizeData(userid)
+            calcDiff_Enhanced(userid, True)
         #             user_data.iloc[index, 4:5] = 1
         #         else:
         #              user_data.iloc[index, 4:5] = 2
@@ -339,7 +453,7 @@ def updateStatusInCSVForDiff():
 
 
 if __name__ == "__main__":
-    userid = '415269'  # spammer
+    userid = '15'  # spammer
     # "userid": 39180130,  commit vandal once
     # "userid": 415269,  good user
 
@@ -349,13 +463,16 @@ if __name__ == "__main__":
     # getUserContrib(userid)
     # getUserContribLast(userid)
     # organizeData(userid)
-    calcDiff(userid)
+    # calcDiff(userid)
 
     # plotGraphForLongevity(userid)
     # plotGraphTrustScore(userid)
 
     # getAllUsers()
 
-#    user_data = pd.read_csv("csv/all_user_data_c_50_90_s.csv")
-    # user_data.apply(processData, axis=1)
+    # test cases
+    # testExtractOriginalContribution()
+    # testDiffOfContributionStrict()
+    user_data = pd.read_csv("csv/all_user_data_c_50_90_s.csv")
+    user_data.parallel_apply(processData, axis=1)
     # updateStatusInCSVForDiff()

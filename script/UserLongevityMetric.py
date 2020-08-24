@@ -66,7 +66,7 @@ def getUserContrib(user_id):
                                                                      rvprop={'ids', 'timestamp', 'userid', 'content'},
                                                                      rv_limit=33, rvstartid=item_contrib['parentid'],
                                                                      should_continue=True, continue_until=3)
-            if len(values) > 96:
+            if len(values) > 5:
                 for id in values:
                     try:
                         with open('rev_user/' + str(id['revid']), 'w') as outfile:
@@ -84,7 +84,7 @@ def getUserContrib(user_id):
                 rev_data.append(item_contrib)
 
     print("Total Article Count: " + str(len(rev_data)))
-    with open('user_data_100/rev_list_' + user_id + '.json', 'w') as outfile:
+    with open('user_data_all/rev_list_' + user_id + '.json', 'w') as outfile:
         json.dump(rev_data, outfile)
 
     return len(rev_data)
@@ -257,7 +257,7 @@ def calcDiff_Enhanced(user_id, should_clean=False):
           the list of revisions contributed by user and the for each revision it has the Longevity value in no of revision and time.
        """
     try:
-        with open('user_data_100/rev_list_' + user_id + '-o.json', 'r') as infile:
+        with open('user_data_all/rev_list_' + user_id + '.json', 'r') as infile:
             updated_data = json.loads(infile.read())
 
         for row in updated_data:
@@ -300,6 +300,9 @@ def calcDiff_Enhanced(user_id, should_clean=False):
                           [row['pageid'], row['parentid'], row['revid'], total])
                     index = 0
                     hasZero = False
+                    lastUserID = 0
+                    total_no_rev = len(next_revs)
+
                     for rev in next_revs:
                         try:
                             next_rev = util.read_file('rev_user/' + str(rev['revid']))
@@ -307,10 +310,15 @@ def calcDiff_Enhanced(user_id, should_clean=False):
                                 next_rev = util.cleanhtml(next_rev)
                             d_text = util.getInsertedContentSinceParentRevision(parent_rev, next_rev).strip()
                             ratio = util.textPreservedRatioBigramEnhanced(original_text, d_text)
+
+                            if rev['userid'] != lastUserID and rev['userid'] != row['userid']:
+                                index += 1
+                                lastUserID = rev['userid']
+
                             print("ratio: ", ratio)
                             if ratio == 0 and not hasZero:
                                 hasZero = True
-                                row['longevityRev'] = index
+                                row['longevityRev'] = round(index / total_no_rev, 0)
                                 row['matchRatio'] = ratio
                                 row['totalContrib'] = total
                                 print("in zero mode")
@@ -318,7 +326,7 @@ def calcDiff_Enhanced(user_id, should_clean=False):
                                 hasZero = False
                                 print("out zero mode")
                             if ratio < 0.90 and capture_longevity and not hasZero:
-                                row['longevityRev'] = index
+                                row['longevityRev'] = round(index / total_no_rev, 0)
                                 row['matchRatio'] = ratio
                                 row['totalContrib'] = total
                                 capture_longevity = False
@@ -327,9 +335,9 @@ def calcDiff_Enhanced(user_id, should_clean=False):
                         except Exception as e:
                             print("file error", e)
                             index -= 1
-                        index += 1
+
                     if capture_longevity and not hasZero:
-                        row['longevityRev'] = index
+                        row['longevityRev'] = round(index / total_no_rev, 0)
                         row['matchRatio'] = ratio
                         row['totalContrib'] = total
                         print("longevity-L: ", index)
@@ -408,9 +416,10 @@ def processData(row):
         print(row)
         print("Index: " + str(index))
         userid = str(row['id'])
-        #         if getUserContrib(userid) >0:
+        if getUserContrib(userid) > 0:
+            1 + 1
         # organizeData(userid)
-        calcDiff_Enhanced(userid, True)
+        # calcDiff_Enhanced(userid, True)
 
 
 #             user_data.iloc[index, 4:5] = 1

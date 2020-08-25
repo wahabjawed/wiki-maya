@@ -301,8 +301,19 @@ def calcDiff_Enhanced(user_id, should_clean=False):
                     index = 0
                     hasZero = False
                     lastUserID = 0
-                    total_no_rev = len(next_revs)
+                    total_no_rev = 0
 
+
+                    #finding total number of user turns
+                    for rev in next_revs:
+                        if rev['userid'] != lastUserID and rev['userid'] != row['userid']:
+                            total_no_rev += 1
+                            lastUserID = rev['userid']
+
+
+                    lastUserID =0
+
+                    #finding achieved number of user turns
                     for rev in next_revs:
                         try:
                             next_rev = util.read_file('rev_user/' + str(rev['revid']))
@@ -334,7 +345,6 @@ def calcDiff_Enhanced(user_id, should_clean=False):
                                 break
                         except Exception as e:
                             print("file error", e)
-                            index -= 1
 
                     if capture_longevity and not hasZero:
                         row['longevityRev'] = round(index / total_no_rev, 0)

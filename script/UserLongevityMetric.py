@@ -303,17 +303,17 @@ def calcDiff_Enhanced(user_id, should_clean=False):
                     lastUserID = 0
                     total_no_rev = 0
 
-
-                    #finding total number of user turns
+                    # finding total number of user turns
                     for rev in next_revs:
                         if rev['userid'] != lastUserID and rev['userid'] != row['userid']:
                             total_no_rev += 1
                             lastUserID = rev['userid']
 
+                    print("Total Turns/ Contribution: ", [total_no_rev, len(next_revs)])
 
-                    lastUserID =0
+                    lastUserID = 0
 
-                    #finding achieved number of user turns
+                    # finding achieved number of user turns
                     for rev in next_revs:
                         try:
                             next_rev = util.read_file('rev_user/' + str(rev['revid']))
@@ -329,7 +329,7 @@ def calcDiff_Enhanced(user_id, should_clean=False):
                             print("ratio: ", ratio)
                             if ratio == 0 and not hasZero:
                                 hasZero = True
-                                row['longevityRev'] = round(index / total_no_rev, 0)
+                                row['longevityRev'] = round(index / total_no_rev, 2) * 100
                                 row['matchRatio'] = ratio
                                 row['totalContrib'] = total
                                 print("in zero mode")
@@ -337,7 +337,7 @@ def calcDiff_Enhanced(user_id, should_clean=False):
                                 hasZero = False
                                 print("out zero mode")
                             if ratio < 0.90 and capture_longevity and not hasZero:
-                                row['longevityRev'] = round(index / total_no_rev, 0)
+                                row['longevityRev'] = round(index / total_no_rev, 2) * 100
                                 row['matchRatio'] = ratio
                                 row['totalContrib'] = total
                                 capture_longevity = False
@@ -347,12 +347,12 @@ def calcDiff_Enhanced(user_id, should_clean=False):
                             print("file error", e)
 
                     if capture_longevity and not hasZero:
-                        row['longevityRev'] = round(index / total_no_rev, 0)
+                        row['longevityRev'] = round(index / total_no_rev, 2) * 100
                         row['matchRatio'] = ratio
                         row['totalContrib'] = total
                         print("longevity-L: ", index)
         if len(updated_data) > 0:
-            with open('user_data_100_b/rev_list_' + user_id + '-dp.json', 'w') as outfile:
+            with open('user_data_all_b/rev_list_' + user_id + '-dp.json', 'w') as outfile:
                 json.dump(updated_data, outfile)
     except Exception as e:
         print("skipping diff as no contribution: ", e)
@@ -426,10 +426,10 @@ def processData(row):
         print(row)
         print("Index: " + str(index))
         userid = str(row['id'])
-        if getUserContrib(userid) > 0:
-            1 + 1
+        #         if getUserContrib(userid) > 0:
+        #             1 + 1
         # organizeData(userid)
-        # calcDiff_Enhanced(userid, True)
+        calcDiff_Enhanced(userid, True)
 
 
 #             user_data.iloc[index, 4:5] = 1

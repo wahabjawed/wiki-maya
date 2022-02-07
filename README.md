@@ -54,7 +54,7 @@ You can report the bugs at the [issue tracker](https://github.com/wahabjawed/wik
 
 **OR**
 
-You can [message me](https://www.facebook.com/wahab.jawed) if you can't get it to work. In fact, you should message me anyway.
+You can [message me](https://www.facebook.com/wahab.jawed) if you can't get it to work.
 
 ## Contributing
 
